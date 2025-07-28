@@ -11,9 +11,10 @@ RUN pip install poetry==1.8.1 pytest-xdist==3.5.0
 
 COPY . /app/
 
-# COPY pyproject.toml poetry.lock* /app/
-# COPY connector-pdf/ /app/connector-pdf/
+# Install Poetry
 RUN poetry install --only main
+
+# Install playwright browsers
 RUN poetry run playwright install chromium --with-deps --only-shell
 
 # install minio client
@@ -21,10 +22,6 @@ RUN apt-get update && apt-get install -y wget
 RUN wget https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc && \
   chmod +x /usr/local/bin/mc
 
-# Copy our custom entrypoint
-# COPY bin/docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /app/bin/docker-entrypoint.sh
-RUN chmod +x /app/bin/run_server_locally
 
 ENTRYPOINT ["/app/bin/docker-entrypoint.sh"]
 CMD ["/app/bin/run_server_locally"]

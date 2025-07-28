@@ -11,13 +11,12 @@ tasks:
     - echo "{{.GREETING}}"
     silent: true
 
+  # build the image locally
+  # pass in BUILD_ARGS ex `task build BUILD_ARGS=--no-cache`
   build:
+    deps: [ down ]
     cmds:
-    - docker compose build
-
-  build-no-cache:
-    cmds:
-    - docker compose build --no-cache
+    - docker compose build --build-arg BUILD_ARGS=${BUILD_ARGS}
 
   up:
     cmds:
@@ -34,3 +33,12 @@ tasks:
   poetry-install:
     cmds:
     - docker compose run --rm spiffworkflow-connector poetry install --no-root
+
+  powerwash:
+    cmds:
+    - task: down
+    - task: build
+      vars: { BUILD_ARGS: '--no-cache' }
+      silent: true
+    - task: poetry-install
+    - task: up
