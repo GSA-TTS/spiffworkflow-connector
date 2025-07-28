@@ -1,0 +1,36 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+  default:
+    cmds:
+    - echo "{{.GREETING}}"
+    silent: true
+
+  build:
+    cmds:
+    - docker compose build
+
+  build-no-cache:
+    cmds:
+    - docker compose build --no-cache
+
+  up:
+    cmds:
+    - docker compose up -d
+
+  down:
+    cmds:
+    - docker compose down
+
+  reset:
+    cmds:
+    - docker compose down -v
+
+  poetry-install:
+    cmds:
+    - docker compose run --rm spiffworkflow-connector poetry install --no-root
