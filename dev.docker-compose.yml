@@ -1,0 +1,45 @@
+
+services:
+  spiffworkflow-connector:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    depends_on:
+      minio:
+        condition: service_started
+    environment:
+      FLASK_ENV: "development"
+      FLASK_DEBUG: "1"
+      POETRY_VIRTUALENVS_IN_PROJECT: "true"
+    volumes:
+      - ./:/app
+
+  minio:
+    container_name: "minio"
+    image: minio/minio
+    command: server /tmp/minio --console-address ":9002"
+    ports:
+      - "9001:9000" # S3 API
+      - "9002:9002" # Minio Console
+    volumes:
+      - "minio-vol:/tmp/minio"
+
+  createbuckets:
+    image: minio/minio
+    depends_on:
+      - minio
+    restart: "no"
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      /usr/bin/mc alias set dockerminio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb dockerminio/testbucket;
+      exit 0;
+      "
+
+volumes:
+  minio-vol:
+
+networks:
+  shared-net:
+    external: true

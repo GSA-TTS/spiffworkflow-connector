@@ -3,42 +3,41 @@
 version: '3'
 
 vars:
-  GREETING: Hello, World!
+  DEV_MODE: '{{.DEV_MODE | default "true"}}' # you need to explictly force non-dev to make things easier
+  YML_FILES: "-f docker-compose.yml {{if eq .DEV_MODE `true`}}-f dev.docker-compose.yml{{end}}"
 
 tasks:
-  default:
+  config:
     cmds:
-    - echo "{{.GREETING}}"
-    silent: true
+    - docker compose {{.YML_FILES}} config
 
-  # build the image locally
-  # pass in BUILD_ARGS ex `task build BUILD_ARGS=--no-cache`
   build:
-    deps: [ down ]
     cmds:
-    - docker compose build --build-arg BUILD_ARGS=${BUILD_ARGS}
+    - docker compose {{.YML_FILES}} build {{.CLI_ARGS}}
 
   up:
     cmds:
-    - docker compose up -d
+    - docker compose {{.YML_FILES}} up -d {{.CLI_ARGS}}
 
   down:
     cmds:
-    - docker compose down
+    - docker compose {{.YML_FILES}} down {{.CLI_ARGS}}
 
-  reset:
+  poetry-lock:
     cmds:
-    - docker compose down -v
+    - docker compose {{.YML_FILES}} run --rm spiffworkflow-connector poetry lock
 
   poetry-install:
     cmds:
-    - docker compose run --rm spiffworkflow-connector poetry install --no-root
+    - docker compose {{.YML_FILES}} run --rm spiffworkflow-connector poetry install
 
-  powerwash:
+  # reset the system for rapid development
+  reset:
     cmds:
+    - echo "*** Dev Mode is {{.DEV_MODE}} ***"
     - task: down
+      vars: { CLI_ARGS: "-v" }
     - task: build
       vars: { BUILD_ARGS: '--no-cache' }
-      silent: true
     - task: poetry-install
     - task: up

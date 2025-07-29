@@ -12,7 +12,7 @@ RUN pip install poetry==1.8.1 pytest-xdist==3.5.0
 COPY . /app/
 
 # Install Poetry
-RUN poetry install --only main
+RUN poetry install
 
 # Install playwright browsers
 RUN poetry run playwright install chromium --with-deps --only-shell
@@ -22,6 +22,4 @@ RUN apt-get update && apt-get install -y wget
 RUN wget https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc && \
   chmod +x /usr/local/bin/mc
 
-
-ENTRYPOINT ["/app/bin/docker-entrypoint.sh"]
 CMD ["/app/bin/run_server_locally"]

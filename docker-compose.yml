@@ -5,56 +5,22 @@ services:
     container_name: spiffworkflow-connector
     build:
       context: .
-      dockerfile: dev.Dockerfile
+      dockerfile: Dockerfile
     user: ${RUN_AS:-0:0}
-    depends_on:
-      minio:
-        condition: service_started      
     environment:
-      FLASK_ENV: "${FLASK_ENV:-development}"
-      FLASK_DEBUG: "${FLASK_DEBUG:-1}"
+      FLASK_ENV: "production"
+      FLASK_DEBUG: "0"
       FLASK_SESSION_SECRET_KEY: "${FLASK_SESSION_SECRET_KEY:-super_secret_key}"
-      CONNECTOR_PROXY_PORT: "${SPIFF_CONNECTOR_PORT:-8004}"
+      CONNECTOR_PROXY_PORT: "${PORT:-8080}"
       POETRY_VIRTUALENVS_IN_PROJECT: "true"
-      PLAYWRIGHT_BROWSERS_PATH: "/opt/playwright"
       XDG_CACHE_HOME: "/app/.cache"
     env_file:
       - path: .env
         required: false      
     ports:
-      - "${SPIFF_CONNECTOR_PORT:-8004}:${SPIFF_CONNECTOR_PORT:-8004}/tcp"
+      - "${PORT:-8080}:${PORT:-8080}/tcp"
     healthcheck:
-      test: "curl localhost:${SPIFF_CONNECTOR_PORT:-8004}/liveness --fail"
+      test: "curl localhost:${PORT:-8080}/liveness --fail"
       interval: 10s
       timeout: 5s
       retries: 20
-    volumes:
-      - ./:/app      
-
-  minio:
-    container_name: "minio"
-    image: minio/minio
-    command: server /tmp/minio --console-address ":9002"
-    ports:
-      - "9001:9000" # S3 API
-      - "9002:9002" # Minio Console
-    volumes:
-      - "minio-vol:/tmp/minio"
-
-  createbuckets:
-    image: minio/minio
-    depends_on:
-      - minio
-    restart: "no"
-    entrypoint: >
-      /bin/sh -c "
-      sleep 5;
-      /usr/bin/mc alias set dockerminio http://minio:9000 minioadmin minioadmin;
-      /usr/bin/mc mb dockerminio/testbucket;
-      exit 0;
-      "
-
-volumes:
-  spiffworkflow_backend_db:
-    driver: local
-  minio-vol:
