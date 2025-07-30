@@ -1,18 +1,18 @@
-
 services:
-  spiffworkflow-connector:
+  acp:
     build:
       context: .
       dockerfile: dev.Dockerfile
-    depends_on:
-      minio:
-        condition: service_started
+    user: "${RUN_AS}"
     environment:
-      FLASK_ENV: "development"
-      FLASK_DEBUG: "1"
-      POETRY_VIRTUALENVS_IN_PROJECT: "true"
+      HOME: "/app"
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - 8200:8200/tcp
     volumes:
-      - ./:/app
+      - .:/app
 
   minio:
     container_name: "minio"

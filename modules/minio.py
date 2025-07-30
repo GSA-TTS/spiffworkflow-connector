@@ -5,5 +5,5 @@ client = Minio(
     "minio:9000",
     access_key="minioadmin",
     secret_key="minioadmin",
-    secure=False,  # Set to True if using HTTPS 
+    secure=False,  # Set to True if using HTTPS
 )
