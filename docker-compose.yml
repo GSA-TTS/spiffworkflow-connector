@@ -12,7 +12,6 @@ services:
       FLASK_DEBUG: "0"
       FLASK_SESSION_SECRET_KEY: "${FLASK_SESSION_SECRET_KEY:-super_secret_key}"
       CONNECTOR_PROXY_PORT: "${PORT:-8080}"
-      POETRY_VIRTUALENVS_IN_PROJECT: "true"
       XDG_CACHE_HOME: "/app/.cache"
     env_file:
       - path: .env

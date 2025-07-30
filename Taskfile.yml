@@ -31,13 +31,22 @@ tasks:
     cmds:
     - docker compose {{.YML_FILES}} run --rm spiffworkflow-connector poetry install
 
-  # reset the system for rapid development
+  # Reset the system for rapid development
+  # *** NOTE: THIS WORKFLOW FOR DEV ONLY ***
   reset:
     cmds:
     - echo "*** Dev Mode is {{.DEV_MODE}} ***"
     - task: down
-      vars: { CLI_ARGS: "-v" }
     - task: build
-      vars: { BUILD_ARGS: '--no-cache' }
+      vars: { CLI_ARGS: "--no-cache" }
     - task: poetry-install
+      #we need to do this after our install to deal with permissions issues due to mounting this as a volume...
+    - task: up
+
+  test_prod:
+    cmds:
+    - echo "*** Dev Mode is {{.DEV_MODE}} ***"
+    - task: down
+    - task: build
+      vars: { CLI_ARGS: "--no-cache" }
     - task: up
