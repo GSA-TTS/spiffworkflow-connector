@@ -7,8 +7,8 @@ import json
 import os
 import io
 import urllib.parse
-
-from modules.minio import client
+import boto3
+from botocore.config import Config  # type: ignore
 from jinja2 import Environment, FileSystemLoader
 from playwright.async_api import async_playwright
 
@@ -82,24 +82,25 @@ class v1_do_pdf_connector:
 
     async def on_post(self, req, resp):
         params = await req.media
+        error = None
         self.bucket = params.get("bucket")
         self.object_name = params.get("object_name")
         self.template_name = params.get("template_name")
         self.config = json.loads(params.get("headers"))
         self.test_data = params.get("test_data")
-        # status = "200"
-        error = {}
-        # response = {"bucket": self.bucket, "object": self.object_name}
-        # resp.media = {
-        #     "command_response": {
-        #         "body": response,
-        #         "mimetype": "application/json",
-        #         "http_status": status,
-        #     },
-        #     "command_response_version": 2,
-        #     "error": error,
-        #     "spiff__logs": [],
-        # }
+
+        self.s3_client = boto3.client(
+            "s3",
+            aws_access_key_id=self.config.get("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=self.config.get("AWS_SECRET_ACCESS_KEY"),
+            config=Config(
+                region_name=self.config.get("AWS_DEFAULT_REGION"),
+                signature_version="s3v4",
+                client_context_params={
+                    "endpoint_url": self.config.get("S3_ENDPOINT_URL", None)
+                },
+            ),
+        )
 
         # Build the template
         template_path = os.path.abspath("./templates")
@@ -142,14 +143,11 @@ class v1_do_pdf_connector:
             #         Body=pdf_stream,
             #     )
 
-            result = client.put_object(
-                self.bucket,
-                self.object_name,
-                pdf_stream,
-                length=pdf_size,
-                content_type="application/pdf",
+            result = self.s3_client.put_object(
+                Bucket=self.bucket,
+                Key=self.object_name,
+                Body=pdf_stream,
             )
-
             # If no exception, upload succeeded. Now construct the response.
             object_name = urllib.parse.quote_plus(self.object_name)
 
@@ -161,9 +159,7 @@ class v1_do_pdf_connector:
             # else:
             #     object_url = f"https://s3-us-gov-west-1.amazonaws.com/{self.bucket}/{self.object_name}"
 
-            object_url = (
-                f"http://localhost:9002/browser/{self.bucket}/{object_name}"
-            )
+            object_url = f"https://s3-{self.config.get("AWS_DEFAULT_REGION")}.amazonaws.com/{self.bucket}/{self.object_name}"
 
             response = json.dumps(
                 {
@@ -177,14 +173,10 @@ class v1_do_pdf_connector:
             )
             status = "200"
         except Exception as e:
+            response = "error"
             error = json.dumps({"error": f"AWS Exception {e}"})
             status = "500"
 
-        # return {
-        #     "response": response,
-        #     "status": status,
-        #     "mimetype": "application/json",
-        # }
 
         resp.media = {
             "command_response": {
@@ -269,6 +261,7 @@ pdf_to_s3_params = [
     {"id": "bucket", "type": "str", "required": True},
     {"id": "object_name", "type": "str", "required": True},
     {"id": "template_name", "type": "str", "required": True},
+    {"id": "storage_type", "type": "str", "required": True},
     {"id": "headers", "type": "str", "required": True},
     {"id": "test_data", "type": "dict", "required": False},
 ]

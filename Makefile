@@ -23,7 +23,7 @@ build-images:
 		--build-arg USER_NAME=$(USER_NAME) \
 		--build-arg GROUP_ID=$(GROUP_ID) \
 		--build-arg GROUP_NAME=$(GROUP_NAME) \
-		$(JUST) $(BUILD_ARGS)
+		$(JUST)
 
 dev-env: dev-stop build-images
 	@true
@@ -32,7 +32,7 @@ dev-start: dev-stop
 	$(DOCKER_COMPOSE) up -d
 	
 dev-stop:
-	$(DOCKER_COMPOSE) down
+	$(DOCKER_COMPOSE) down -v
 	
 logs:
 	docker compose logs -f $(SERVICE)

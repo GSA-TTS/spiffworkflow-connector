@@ -5,7 +5,8 @@ services:
       dockerfile: Dockerfile
     environment:
       HOST: "0.0.0.0"
-      PORT: "${ACP_PORT:-8200}"
+      PORT: "${PORT:-8080}"
       XDG_CACHE_HOME: "/app/.cache"
+      DEPLOYMENT: "prod"
     ports:
-      - "${ACP_PORT:-8200}:${ACP_PORT:-8200}/tcp"
+      - "${PORT:-8080}:${PORT:-8080}/tcp"

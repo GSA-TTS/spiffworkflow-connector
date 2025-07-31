@@ -6,6 +6,7 @@ services:
     user: "${RUN_AS}"
     environment:
       HOME: "/app"
+      DEPLOYMENT: "local"
     env_file:
       - path: .env
         required: false
@@ -31,15 +32,11 @@ services:
     restart: "no"
     entrypoint: >
       /bin/sh -c "
-      sleep 5;
-      /usr/bin/mc alias set dockerminio http://minio:9000 minioadmin minioadmin;
-      /usr/bin/mc mb dockerminio/testbucket;
+      /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb myminio/testbucket;
+      /usr/bin/mc policy set download myminio/testbucket;
       exit 0;
       "
 
 volumes:
   minio-vol:
-
-networks:
-  shared-net:
-    external: true

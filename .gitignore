@@ -133,3 +133,12 @@ dmypy.json
 
 # Mac only
 .DS_Store
+
+# VS Code
+.vscode
+
+# Configs
+.mc
+!.mc/config.json
+.pki
+
