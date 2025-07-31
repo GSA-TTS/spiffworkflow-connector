@@ -91,14 +91,12 @@ class v1_do_pdf_connector:
 
         self.s3_client = boto3.client(
             "s3",
+            endpoint_url=self.config.get("ENDPOINT_URL", None),
             aws_access_key_id=self.config.get("AWS_ACCESS_KEY_ID"),
             aws_secret_access_key=self.config.get("AWS_SECRET_ACCESS_KEY"),
             config=Config(
                 region_name=self.config.get("AWS_DEFAULT_REGION"),
                 signature_version="s3v4",
-                client_context_params={
-                    "endpoint_url": self.config.get("S3_ENDPOINT_URL", None)
-                },
             ),
         )
 
@@ -128,21 +126,6 @@ class v1_do_pdf_connector:
         pdf_stream.seek(0)
         # Upload the file
         try:
-            # if storage_type == "minio":
-            #     result = client.put_object(
-            #         self.bucket,
-            #         self.object_name,
-            #         pdf_stream,
-            #         length=pdf_size,
-            #         content_type="application/pdf",
-            #     )
-            # else:
-            #     result = client.put_object(
-            #         Bucket=self.bucket,
-            #         Key=self.object_name,
-            #         Body=pdf_stream,
-            #     )
-
             result = self.s3_client.put_object(
                 Bucket=self.bucket,
                 Key=self.object_name,
@@ -151,15 +134,12 @@ class v1_do_pdf_connector:
             # If no exception, upload succeeded. Now construct the response.
             object_name = urllib.parse.quote_plus(self.object_name)
 
-            # if storage_type == "minio":
-            #     object_url = (
-            #         f"http://localhost:9002/browser/{self.bucket}/{object_name}"
-            #     )
-
-            # else:
-            #     object_url = f"https://s3-us-gov-west-1.amazonaws.com/{self.bucket}/{self.object_name}"
-
-            object_url = f"https://s3-{self.config.get("AWS_DEFAULT_REGION")}.amazonaws.com/{self.bucket}/{self.object_name}"
+            if "minio" in self.config.get("ENDPOINT_URL", None):
+                object_url = (
+                    f"http://localhost:9002/browser/{self.bucket}/{object_name}"
+                )
+            else:
+                object_url = f"https://s3-{self.config.get("AWS_DEFAULT_REGION")}.amazonaws.com/{self.bucket}/{self.object_name}"
 
             response = json.dumps(
                 {
@@ -176,7 +156,6 @@ class v1_do_pdf_connector:
             response = "error"
             error = json.dumps({"error": f"AWS Exception {e}"})
             status = "500"
-
 
         resp.media = {
             "command_response": {

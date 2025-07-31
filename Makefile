@@ -35,7 +35,7 @@ dev-stop:
 	$(DOCKER_COMPOSE) down -v
 	
 logs:
-	docker compose logs -f $(SERVICE)
+	$(DOCKER_COMPOSE) logs -f $(SERVICE)
 	
 sh:
 	$(RUN_IN) /bin/bash

@@ -139,6 +139,5 @@ dmypy.json
 
 # Configs
 .mc
-!.mc/config.json
 .pki
 
