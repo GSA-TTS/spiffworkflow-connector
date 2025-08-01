@@ -1,18 +1,19 @@
-
 services:
-  spiffworkflow-connector:
+  acp:
     build:
       context: .
       dockerfile: dev.Dockerfile
-    depends_on:
-      minio:
-        condition: service_started
+    user: "${RUN_AS}"
     environment:
-      FLASK_ENV: "development"
-      FLASK_DEBUG: "1"
-      POETRY_VIRTUALENVS_IN_PROJECT: "true"
+      HOME: "/app"
+      DEPLOYMENT: "local"
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - 8200:8200/tcp
     volumes:
-      - ./:/app
+      - .:/app
 
   minio:
     container_name: "minio"
@@ -32,14 +33,10 @@ services:
     entrypoint: >
       /bin/sh -c "
       sleep 5;
-      /usr/bin/mc alias set dockerminio http://minio:9000 minioadmin minioadmin;
-      /usr/bin/mc mb dockerminio/testbucket;
-      exit 0;
-      "
+      /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb myminio/testbucket;
+      /usr/bin/mc admin accesskey create myminio/ --access-key minioadmin_key --secret-key minioadmin_secret;
+      exit 0;"
 
 volumes:
   minio-vol:
-
-networks:
-  shared-net:
-    external: true
