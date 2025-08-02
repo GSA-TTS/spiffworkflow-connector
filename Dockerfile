@@ -17,5 +17,5 @@ COPY ./templates ./templates/
 
 ENV PORT="8080"
 
-CMD granian --host 0.0.0.0 --port $PORT --interface asgi main:app
+CMD ["/app/bin/run_in_docker"]
 

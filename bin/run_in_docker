@@ -1,0 +1,3 @@
+#!/bin/sh
+
+exec granian --host 0.0.0.0 --port $PORT --interface asgi main:app
