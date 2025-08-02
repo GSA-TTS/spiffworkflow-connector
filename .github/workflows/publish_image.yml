@@ -22,7 +22,7 @@ jobs:
       - name: Publish Spiffworkflow-Connector
         uses: docker/build-push-action@v6
         with:
-          file: ./dev.Dockerfile
+          file: ./Dockerfile
           push: true
           tags: ghcr.io/gsa-tts/spiffworkflow-connector:latest
 
