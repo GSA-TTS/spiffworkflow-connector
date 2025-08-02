@@ -23,6 +23,10 @@ http_client = httpx.AsyncClient(timeout=None)
 #
 
 
+class liveness:
+    async def on_get(self, req, resp):
+        resp.media = {"status": "ok"}
+
 class v1_commands:
     async def on_get(self, req, resp):
         resp.media = embedded_connectors
@@ -198,6 +202,7 @@ app = falcon.asgi.App(
 app.req_options.media_handlers.update(extra_handlers)
 app.resp_options.media_handlers.update(extra_handlers)
 
+app.add_route("/liveness", liveness())
 app.add_route("/v1/commands", v1_commands())
 
 app.add_route("/v1/do/http/DeleteRequest", v1_do_http_connector("DELETE"))
