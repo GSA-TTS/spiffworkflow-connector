@@ -17,5 +17,5 @@ COPY ./templates ./templates/
 
 ENV PORT="8080"
 
-CMD ["/app/bin/run_in_docker"]
+CMD ["/app/bin/boot_server_in_docker"]
 
