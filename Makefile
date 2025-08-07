@@ -40,7 +40,11 @@ logs:
 sh:
 	$(RUN_IN) /bin/bash
 
+# Run integration tests for the artifact commands
+test:
+	./bin/test.sh
+
 .PHONY: build-images \
 	dev-start dev-stop \
 	prof \
-	logs sh
+	logs sh test

@@ -7,6 +7,14 @@ services:
     environment:
       HOME: "/app"
       DEPLOYMENT: "local"
+      # S3 Configuration for local Minio
+      S3_ENDPOINT_URL: "http://minio:9000"
+      S3_PUBLIC_ENDPOINT_URL: "http://localhost:9001"
+      S3_BUCKET: "testbucket"
+      S3_REGION: "us-east-1"
+      AWS_ACCESS_KEY_ID: "minioadmin"
+      AWS_SECRET_ACCESS_KEY: "minioadmin"
+      SIGNED_LINK_EXPIRATION: "3600"
     env_file:
       - path: .env
         required: false
@@ -18,12 +26,12 @@ services:
   minio:
     container_name: "minio"
     image: minio/minio
-    command: server /tmp/minio --console-address ":9002"
+    command: server /data --console-address ":9002"
     ports:
       - "9001:9000" # S3 API
       - "9002:9002" # Minio Console
     volumes:
-      - "minio-vol:/tmp/minio"
+      - "./minio_data:/data"
 
   createbuckets:
     image: minio/minio
@@ -38,5 +46,4 @@ services:
       /usr/bin/mc admin accesskey create myminio/ --access-key minioadmin_key --secret-key minioadmin_secret;
       exit 0;"
 
-volumes:
-  minio-vol:
+

@@ -1,20 +1,25 @@
 **SpiffWorkflow Service Connector**
 =====================================
 
-This repository contains a V2 (simplified) implementation of SpiffWorkflow's Service Connector Proxy. Specifically, it embeds a service connector extension called `PDFtoS3` that generates a PDF from a template and uploads it to an S3 bucket.
+This repository contains a V2 (simplified) implementation of SpiffWorkflow's Service Connector Proxy. It provides an "Artifacts" service that can generate a PDF from an included HTML template and manage its storage in an S3 bucket.
 
 **Overview**
 ------------
 
-The `PDFtoS3` class takes in a template name, data, and S3 bucket information, and generates a PDF using the Playwright library. It then uploads the PDF to the specified S3 bucket using either a Minio client (for development) or an S3 client (for production).
+The Artifacts service provides two main commands:
+
+1. `GenerateArtifact`: Takes a template name, data, and a unique ID. It generates a PDF using the Playwright library and uploads it to a configured S3 bucket.
+2. `GetLinkToArtifact`: Takes an artifact ID and returns public and/or private links to the stored artifact.
+
+This connector is designed to be flexible, supporting different S3 storage backends (like Minio for development and AWS S3 for production) through configuration.
 
 **Features**
 ------------
 
-* Generate PDFs from templates using Jinja2
-* Upload PDFs to S3 buckets using Minio or S3 clients
-* Supports development and production environments
-* Returns a JSON response with upload result, including object URL, bucket name, and object name
+* Generate PDFs from HTML templates using Jinja2 placeholders.
+* Store generated artifacts in S3-compatible storage.
+* Retrieve pre-signed and private links to stored artifacts.
+* Returns a JSON response with artifact links.
 
 **Requirements**
 ---------------
@@ -22,57 +27,75 @@ The `PDFtoS3` class takes in a template name, data, and S3 bucket information, a
 * Python 3.12+
 * Playwright library
 * Jinja2 library
-* Minio client (for development)
-* S3 client (for production)
-* S3 bucket credentials
+* S3 bucket credentials and configuration
 
 **Usage**
 -----
 
-1. Install the required libraries using `pip install -r requirements.txt`
-2. Create an instance of the `PDFtoS3` class, passing in the required parameters (bucket name, object name, template name, headers, and test data)
-3. Call the `execute` method to generate the PDF and upload it to S3
-4. Handle the JSON response returned by the `execute` method
+1. Install the required libraries using `pip install -r requirements.txt`.
+2. Ensure your environment is configured with the necessary S3 credentials. See the Configuration section.
+3. Use the `GenerateArtifact` command to create and store a PDF.
+4. Use the `GetLinkToArtifact` command to retrieve links to an existing artifact.
+
+**Configuration**
+-----------------
+
+The S3 connection is configured via environment variables. The following variables are required:
+
+* `S3_ENDPOINT_URL`: The URL of the S3-compatible storage.
+* `S3_ACCESS_KEY_ID`: The access key for the S3 bucket.
+* `S3_SECRET_ACCESS_KEY`: The secret key for the S3 bucket.
+* `S3_REGION`: The AWS region of the bucket.
+* `S3_BUCKET`: The name of the S3 bucket to use.
+
+If there's a Cloud Foundry-style VCAP_SERVICES environment variable, credentials for an S3 service named "artifacts", if present, will be used instead.
+
 
 **Example**
 -------
 
-Assuming the service is running on http://localhost:5000 and accepts JSON payloads, you can use the following curl command to hit the service:
+Assuming the service is running on `http://localhost:8200`, you can use the following `curl` commands.
+
+### Generate an Artifact
+
+This command generates a new PDF from the `blm-ce.html` template, saves it with the ID `my-test-artifact-123`, and returns links to it.
 
 ```bash
 curl -X POST \
-  http://localhost:8200/v1/do/pdf/pdf_to_s3 \
+  http://localhost:8200/v1/do/artifacts/GenerateArtifact \
   -H 'Content-Type: application/json' \
   -d '{
-        "bucket": "testbucket",
-        "object_name": "$YOUR_OBJECT_NAME",
-        "template_name": "$YOUR_TEMPLATE_NAME",
-        "headers": "{\"AWS_ACCESS_KEY_ID\": \"$YOUR_AWS_ACCESS_KEY_ID\", \"AWS_SECRET_ACCESS_KEY\": \"$YOUR_AWS_SECRET_ACCESS_KEY\", \"AWS_DEFAULT_REGION\": \"us-gov-west-1\"}",
-        "test_data": {
-          "key": "value"
-        }
+        "id": "my-test-artifact-123",
+        "template": "blm-ce.html",
+        "data": {
+          "some_key": "some_value"
+        },
+        "generate_links": true
       }'
 ```
-This will send a JSON payload to the service, which will generate a PDF and upload it to the specified S3 bucket.
 
-**NOTES:**
-- Your template name must be a template that is present in `/templates` directory.
-- Ideally, your test_data dict represents keys that are present in the Jinja template you supplied above.
+### Get a Link to an Artifact
 
-### Using the local Minio client
-
-To use the Minio client, you need to modify your headers string to be:
+This command retrieves the links for an existing artifact.
 
 ```bash
-	"headers": "{\"ENDPOINT_URL\": \"http://minio:9000\", \"AWS_ACCESS_KEY_ID\": \"minioadmin_key\", \"AWS_SECRET_ACCESS_KEY\":\"minioadmin_secret\", \"AWS_DEFAULT_REGION\": \"us-east-1\"}",
+curl -X POST \
+  http://localhost:8200/v1/do/artifacts/GetLinkToArtifact \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "id": "my-test-artifact-123"
+      }'
 ```
 
-Adding the extra ENDPOINT_URL string will cause Boto to utilize the local Minio container rather than defaulting to actual S3.
+**NOTES:**
+
+- Your template name must correspond to a file in the `/templates` directory.
+- The `data` dictionary should contain keys that are referenced in the Jinja template placeholders.
 
 **Development**
 --------------
 
-To develop and test this repository, you can run `make` in a shell which will build and start the local docker network.
+To develop and test this repository, you can run `make` in a shell, which will build and start the local Docker network, including a Minio instance for storage. Running `make test` will run a test script for existing functionality.
 
 **Contributing**
 ------------
