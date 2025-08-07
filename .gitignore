@@ -141,3 +141,4 @@ dmypy.json
 .mc
 .pki
 
+minio_data
