@@ -92,10 +92,6 @@ curl -X POST \
 - Your template name must correspond to a file in the `/templates` directory.
 - The `data` dictionary should contain keys that are referenced in the Jinja template placeholders.
 
-### Deprecated `pdf_to_s3` command
-
-The previous `pdf/pdf_to_s3` command is now deprecated and will be removed in a future version. Please migrate to using the `artifacts/GenerateArtifact` command.
-
 **Development**
 --------------
 
