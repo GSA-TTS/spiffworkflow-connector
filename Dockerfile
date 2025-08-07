@@ -11,7 +11,7 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 RUN playwright install chromium --with-deps --only-shell
 
-COPY main.py .
+COPY *.py .
 COPY ./bin ./bin/
 COPY ./templates ./templates/
 
