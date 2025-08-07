@@ -5,7 +5,6 @@ import httpx
 import orjson
 
 from artifacts import v1_do_artifacts_connector
-from pdf import v1_do_pdf_connector
 
 # TODO: change this for prod
 logging.basicConfig(level=logging.INFO)
@@ -109,9 +108,6 @@ artifacts = v1_do_artifacts_connector()
 app.add_route("/v1/do/artifacts/GenerateArtifact", artifacts, suffix="generate_artifact")
 app.add_route("/v1/do/artifacts/GetLinkToArtifact", artifacts, suffix="get_link")
 
-# Deprecated route - will be removed in future version
-app.add_route("/v1/do/pdf/pdf_to_s3", v1_do_pdf_connector())
-
 #
 # Static Data
 #
@@ -151,15 +147,6 @@ http_rw_params = [
     *http_basic_auth_params,
 ]
 
-pdf_to_s3_params = [
-    {"id": "bucket", "type": "str", "required": True},
-    {"id": "object_name", "type": "str", "required": True},
-    {"id": "template_name", "type": "str", "required": True},
-    {"id": "storage_type", "type": "str", "required": True},
-    {"id": "headers", "type": "str", "required": True},
-    {"id": "test_data", "type": "dict", "required": False},
-]
-
 embedded_connectors = [
     {"id": "http/DeleteRequest", "parameters": http_rw_params},
     {"id": "http/GetRequest", "parameters": http_ro_params},
@@ -169,6 +156,4 @@ embedded_connectors = [
     {"id": "http/PutRequest", "parameters": http_rw_params},
     {"id": "artifacts/GenerateArtifact", "parameters": generate_artifact_params},
     {"id": "artifacts/GetLinkToArtifact", "parameters": get_link_params},
-    # Deprecated - will be removed in future version
-    {"id": "pdf/pdf_to_s3", "parameters": pdf_to_s3_params},
 ]
