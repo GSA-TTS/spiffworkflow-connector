@@ -2,6 +2,8 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+RUN apt-get install -y curl
+
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
 
 COPY requirements.txt .
