@@ -2,7 +2,7 @@ FROM python:3.12-bookworm
 
 WORKDIR /app
 
-RUN apt-get install -y curl
+RUN apt-get update && apt-get install -y curl
 
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
 
