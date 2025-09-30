@@ -5,9 +5,11 @@ WORKDIR /app
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
 
 COPY requirements.txt .
+COPY requirements-dev.txt .
 
 RUN pip install --no-cache-dir --upgrade pip \
-  && pip install --no-cache-dir -r requirements.txt
+  && pip install --no-cache-dir -r requirements.txt \
+  && pip install --no-cache-dir -r requirements-dev.txt
 
 RUN playwright install chromium --with-deps --only-shell
 

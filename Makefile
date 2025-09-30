@@ -7,7 +7,7 @@ ME ?= $(USER_ID):$(GROUP_ID)
 DEV_OVERLAYS ?= -f dev.docker-compose.yml
 DOCKER_COMPOSE ?= RUN_AS=$(ME) docker compose -f docker-compose.yml $(DEV_OVERLAYS)
 
-SERVICE ?= acp
+SERVICE ?= connector
 EXEC_IN ?= $(DOCKER_COMPOSE) exec $(SERVICE)
 RUN_IN ?= $(DOCKER_COMPOSE) run --rm $(SERVICE)
 
@@ -44,7 +44,14 @@ sh:
 test:
 	./bin/test.sh
 
+# Run pytest in docker
+test-pytest:
+	$(RUN_IN) pytest -v --cov=. --cov-report=term-missing
+
+# Run all tests (existing + pytest)
+test-all: test test-pytest
+
 .PHONY: build-images \
 	dev-start dev-stop \
 	prof \
-	logs sh test
+	logs sh test test-pytest test-all
