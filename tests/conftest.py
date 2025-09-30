@@ -51,28 +51,6 @@ def fake_filesystem():
             contents=test_template_content,
         )
 
-        # Create another template for invoice testing
-        invoice_template_content = """
-          <!DOCTYPE html>
-          <html>
-          <head>
-              <title>Invoice</title>
-          </head>
-          <body>
-              <h1>Invoice</h1>
-              <p>Customer: {{ customer_name }}</p>
-              <p>Invoice Number: {{ invoice_number }}</p>
-              <p>Amount: ${{ amount }}</p>
-              <p>Date: {{ date }}</p>
-          </body>
-          </html>
-        """.strip()
-
-        patcher.fs.create_file(
-            f"{templates_dir}/invoice_template.html",
-            contents=invoice_template_content,
-        )
-
         try:
             yield patcher.fs, templates_dir
         finally:
