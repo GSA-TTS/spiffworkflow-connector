@@ -47,4 +47,4 @@ test:
 .PHONY: build-images \
 	dev-start dev-stop \
 	prof \
-	logs sh test test-pytest test-all
+	logs sh test
