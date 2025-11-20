@@ -40,16 +40,9 @@ logs:
 sh:
 	$(RUN_IN) /bin/bash
 
-# Run integration tests for the artifact commands
-test:
-	./bin/test.sh
-
 # Run pytest in docker
-test-pytest:
+test:
 	$(RUN_IN) uv run pytest -v --cov=. --cov-report=term-missing
-
-# Run all tests (existing + pytest)
-test-all: test test-pytest
 
 .PHONY: build-images \
 	dev-start dev-stop \
