@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>{{projectName}}</title>
+  <title>{{projectTitle}}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <style>
@@ -88,7 +88,7 @@
         size: letter;
         margin: 1in;
         @top-right {
-          content: "{{projectName}}";
+          content: "{{projectTitle}}";
           font-size: 10pt;
         }
         @bottom-right {
@@ -165,12 +165,12 @@
       </div>
     </section>
     <main role="main" id="main-content">
-     <h1 class="sr-only">{{projectName}}</h1>  
+     <h1 class="sr-only">{{projectTitle}}</h1>  
       <ol class="list-upper-alpha mt-5">
         <li>
           <h3>Background:</h3>
           <p>
-            Proposed Action Title/Type: {{projectName}}
+            Proposed Action Title/Type: {{projectTitle}}
             <br />Location of Proposed Action: {{locationOfProposedAction}}
             <br />Lease/Serial/Case File No (if any): {{leaseSerialCaseFileNumber}}
             <br />Applicant: {{applicant}}

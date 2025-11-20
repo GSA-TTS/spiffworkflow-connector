@@ -1,5 +1,5 @@
 services:
-  acp:
+  connector:
     build:
       context: .
       dockerfile: Dockerfile
