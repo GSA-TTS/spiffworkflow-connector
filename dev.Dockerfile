@@ -1,5 +1,7 @@
 FROM python:3.12-slim-bookworm
 
+COPY --from=ghcr.io/astral-sh/uv:0.8.21 /uv /uvx /bin/
+
 WORKDIR /app
 
 # Install system dependencies and uv

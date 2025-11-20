@@ -46,7 +46,7 @@ test:
 
 # Run pytest in docker
 test-pytest:
-	$(RUN_IN) pytest -v --cov=. --cov-report=term-missing
+	$(RUN_IN) uv run pytest -v --cov=. --cov-report=term-missing
 
 # Run all tests (existing + pytest)
 test-all: test test-pytest
