@@ -1,18 +1,27 @@
 FROM python:3.12-slim-bookworm
 
+COPY --from=ghcr.io/astral-sh/uv:0.8.21 /uv /uvx /bin/
+
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y curl
+# Install system dependencies and uv
+RUN apt-get update && apt-get install -y curl && \
+  curl -LsSf https://astral.sh/uv/install.sh | sh && \
+  apt-get clean && rm -rf /var/lib/apt/lists/*
 
+ENV PATH="/root/.cargo/bin:$PATH"
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
 
-COPY requirements.txt .
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
 
-RUN pip install --no-cache-dir --upgrade pip \
-  && pip install --no-cache-dir -r requirements.txt
+# Install dependencies using uv
+RUN uv sync --frozen --no-dev
 
-RUN playwright install chromium --with-deps --only-shell
+# Install Playwright browser
+RUN uv run playwright install chromium --with-deps --only-shell
 
+# Copy application code
 COPY *.py .
 COPY ./bin ./bin/
 COPY ./templates ./templates/

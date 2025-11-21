@@ -9,7 +9,7 @@ services:
       DEPLOYMENT: "local"
       # S3 Configuration for local Minio
       S3_ENDPOINT_URL: "http://minio:9000"
-      S3_PUBLIC_ENDPOINT_URL: "http://localhost:9001"
+      S3_PUBLIC_ENDPOINT_URL: "http://localhost:9003"
       S3_BUCKET: "testbucket"
       S3_REGION: "us-east-1"
       AWS_ACCESS_KEY_ID: "minioadmin"
@@ -24,12 +24,12 @@ services:
       - .:/app
 
   minio:
-    container_name: "minio"
+    container_name: "minio-spiffworkflow-connector"
     image: minio/minio
-    command: server /data --console-address ":9002"
+    command: server /data --console-address ":9004"
     ports:
-      - "9001:9000" # S3 API
-      - "9002:9002" # Minio Console
+      - "9003:9000" # S3 API
+      - "9004:9002" # Minio Console
     volumes:
       - "./minio_data:/data"
 
@@ -45,5 +45,3 @@ services:
       /usr/bin/mc mb myminio/testbucket;
       /usr/bin/mc admin accesskey create myminio/ --access-key minioadmin_key --secret-key minioadmin_secret;
       exit 0;"
-
-

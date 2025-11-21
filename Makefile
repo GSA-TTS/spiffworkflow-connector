@@ -7,7 +7,7 @@ ME ?= $(USER_ID):$(GROUP_ID)
 DEV_OVERLAYS ?= -f dev.docker-compose.yml
 DOCKER_COMPOSE ?= RUN_AS=$(ME) docker compose -f docker-compose.yml $(DEV_OVERLAYS)
 
-SERVICE ?= acp
+SERVICE ?= connector
 EXEC_IN ?= $(DOCKER_COMPOSE) exec $(SERVICE)
 RUN_IN ?= $(DOCKER_COMPOSE) run --rm $(SERVICE)
 
@@ -40,9 +40,9 @@ logs:
 sh:
 	$(RUN_IN) /bin/bash
 
-# Run integration tests for the artifact commands
+# Run pytest in docker
 test:
-	./bin/test.sh
+	$(RUN_IN) uv run pytest -v --cov=. --cov-report=term-missing
 
 .PHONY: build-images \
 	dev-start dev-stop \
