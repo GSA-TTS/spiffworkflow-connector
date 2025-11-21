@@ -21,6 +21,7 @@ class liveness:
     async def on_get(self, req, resp):
         resp.media = {"status": "ok"}
 
+
 class v1_commands:
     async def on_get(self, req, resp):
         resp.media = embedded_connectors
@@ -105,7 +106,9 @@ app.add_route("/v1/do/http/PutRequest", v1_do_http_connector("PUT"))
 
 # Add new artifact routes
 artifacts = v1_do_artifacts_connector()
-app.add_route("/v1/do/artifacts/GenerateArtifact", artifacts, suffix="generate_artifact")
+app.add_route(
+    "/v1/do/artifacts/GenerateArtifact", artifacts, suffix="generate_artifact"
+)
 app.add_route("/v1/do/artifacts/GetLinkToArtifact", artifacts, suffix="get_link")
 
 #
