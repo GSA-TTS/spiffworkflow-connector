@@ -39,7 +39,7 @@ def create_s3_client(storage_url: Optional[str] = None):
             client_kwargs['use_ssl'] = False
     
     # Handle cases where internal and external endpoints differ:
-    # 1. Docker: internal=minio:9000, external=localhost:9001
+    # 1. Docker: internal=minio:9000, external=localhost:9003
     # 2. AWS: internal=s3.us-east-1.amazonaws.com, external=bucket.s3.us-east-1.amazonaws.com
     # 3. Custom setups: internal=storage.internal, external=storage.public.example.com
     if s3_config.public_endpoint_url:
