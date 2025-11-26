@@ -2,7 +2,7 @@ import os
 import json
 import io
 import logging
-from typing import Optional, Dict, Any
+from typing import Any
 
 from jinja2 import Environment, FileSystemLoader
 from playwright.async_api import async_playwright
@@ -22,6 +22,14 @@ class v1_do_artifacts_connector:
     def __init__(self):
         self.template_path = os.path.abspath("./templates")
         self.env = Environment(loader=FileSystemLoader(self.template_path))
+
+    def get_responsible_official_string(self, approvers: list[dict[str, Any]]):
+        # This is fragile. We get the last two approvers from the approvers list
+        # and render them like {Name 1}, {Name 2}
+        return ", ".join([approver["name"] for approver in approvers[-2:]])
+
+    def get_last_approval_date(self, approvers: list[dict[str, Any]]):
+        return approvers[-1]["date"]
 
     async def on_post_generate_artifact(self, req, resp):
         """Handle the artifacts/GenerateArtifact command."""
@@ -51,7 +59,8 @@ class v1_do_artifacts_connector:
             # arbitrary string.
             template_data["exclusions"] = template_data["exclusionsText"].split('\n')
             template_data["lupDecisions"] = template_data["lupDecisions"].split('\n')
-
+            template_data["responsibleOfficial"] = self.get_responsible_official_string(template_data["approvers"])
+            template_data["approvalDate"] = self.get_last_approval_date(template_data["approvers"])
 
             # Create PDF from template
             template = self.env.get_template(template_name)
@@ -137,7 +146,7 @@ class v1_do_artifacts_connector:
 
     def _generate_artifact_response(
         self, s3_client, bucket: str, key: str, include_presigned: bool
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """Generate the response dictionary with appropriate links."""
         response = {"private_link": generate_private_link(bucket, key)}
 
