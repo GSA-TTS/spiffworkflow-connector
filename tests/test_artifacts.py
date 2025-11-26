@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 API_ENDPOINT = "/v1/do/artifacts/"
 
+
 class TestArtifactsService:
     @patch("artifacts.create_s3_client")
     @patch("artifacts.get_bucket_for_storage")
@@ -20,7 +21,12 @@ class TestArtifactsService:
             "data": {
                 "name": "John Doe",
                 "email": "john@example.com",
-                "date": "2023-09-29",
+                "exclusionsText": "Fake NEPA Compliance Text",
+                "lupDecisions": "Fake LUP Decisions Text",
+                "approvers": [
+                    {"name": "Approver 1", "date": "2023-09-29"},
+                    {"name": "Approver 2", "date": "2023-09-29"},
+                ],
             },
             "generate_links": False,
             "callback": "id",
@@ -28,9 +34,7 @@ class TestArtifactsService:
         }
 
         mock_artifacts_html_to_pdf.return_value = b"fake_pdf_content"
-        result = client.simulate_post(
-            f"{API_ENDPOINT}GenerateArtifact", json=test_data
-        )
+        result = client.simulate_post(f"{API_ENDPOINT}GenerateArtifact", json=test_data)
 
         # assert command returns valid status & response
         json_response = json.loads(result.text)
@@ -63,7 +67,12 @@ class TestArtifactsService:
             "data": {
                 "name": "John Doe",
                 "email": "john@example.com",
-                "date": "2023-09-29",
+                "exclusionsText": "Fake NEPA Compliance Text",
+                "lupDecisions": "Fake LUP Decisions Text",
+                "approvers": [
+                    {"name": "Approver 1", "date": "2023-09-29"},
+                    {"name": "Approver 2", "date": "2023-09-29"},
+                ],
             },
             "generate_links": True,
             "storage": "s3",
@@ -75,9 +84,7 @@ class TestArtifactsService:
             "presigned_link": "https://example.com/presigned-url",
         }
 
-        result = client.simulate_post(
-            f"{API_ENDPOINT}GenerateArtifact", json=test_data
-        )
+        result = client.simulate_post(f"{API_ENDPOINT}GenerateArtifact", json=test_data)
 
         json_response = json.loads(result.text)
         assert json_response["command_response"]["http_status"] == "200"
@@ -125,26 +132,25 @@ class TestBLMSpecificFlows:
                 "locationOfProposedAction": "locationOfProposedAction_val",
                 "leaseSerialCaseFileNumber": "leaseSerialCaseFileNumber_val",
                 "applicant": "applicant_val",
-                "description": "description_val",
+                "projectDescription": "projectDescription_val",
                 "landUsePlanName": "landUsePlanName_val",
                 "dateApproved": "dateApproved_val",
-                "conformanceOption": "conformanceOption_val",
+                "exclusionsText": "Fake exclusions",
+                "lupDecisions": "Fake LUP decisions",
+                "approvers": [
+                    {"name": "Approver 1", "date": "2023-09-29"},
+                    {"name": "Approver 2", "date": "2023-09-29"},
+                ],
                 "lupDecisions": "lupDecisions_val",
-                "managementGoalsObjectives": "managementGoalsObjectives_val",
-                "nepaComplianceOption": "nepaComplianceOption_val",
-                "complianceReference": "complianceReference_val",
                 "publicHealthImpacts": "publicHealthImpacts_val",
                 "naturalResourcesImpacts": "naturalResourcesImpacts_val",
                 "controversialEffects": "controversialEffects_val",
                 "precedentForFutureAction": "precedentForFutureAction_val",
                 "cumulativeImpacts": "cumulativeImpacts_val",
                 "endangeredSpeciesImpacts": "endangeredSpeciesImpacts_val",
-                "violateEnvironmentalLaw": "violateEnvironmentalLaw_val",
                 "limitAccessToSacredSites": "limitAccessToSacredSites_val",
                 "promoteNoxiousWeeds": "promoteNoxiousWeeds_val",
                 "categoricalExclusionJustification": "categoricalExclusionJustification_val",
-                "responsibleOfficial": "responsibleOfficial_val",
-                "date": "date_val",
                 "contactPerson": "contactPerson_val",
                 "contactTitle": "contactTitle_val",
                 "officeName": "officeName_val",
@@ -157,9 +163,7 @@ class TestBLMSpecificFlows:
         }
 
         mock_artifacts_html_to_pdf.return_value = b"fake_pdf_content"
-        result = client.simulate_post(
-            f"{API_ENDPOINT}GenerateArtifact", json=test_data
-        )
+        result = client.simulate_post(f"{API_ENDPOINT}GenerateArtifact", json=test_data)
 
         # assert command returns valid status & response
         json_response = json.loads(result.text)
@@ -170,65 +174,7 @@ class TestBLMSpecificFlows:
         html_content = mock_artifacts_html_to_pdf.call_args[0][0]
 
         for item in test_data["data"]:
-            if item not in ["lupDecisions", "managementGoalsObjectives"]:
+            if item not in ["lupDecisions", "approvers", "exclusionsText"]:
                 assert f"{item}_val" in html_content
-
-    @patch("artifacts.create_s3_client")
-    @patch("artifacts.get_bucket_for_storage")
-    def test_blm_template_logic(
-        self, mock_get_bucket, mock_create_s3_client, client, mock_artifacts_html_to_pdf
-    ):
-        test_data = {
-            "id": "test-artifact-123",
-            "template": "blm-ce.html",
-            "data": {
-                "conformanceOption": "specificallyProvided",
-                "lupDecisions": "lupDecisions_val",
-            },
-            "generate_links": False,
-            "callback": "id",
-            "storage": "s3",
-        }
-
-        mock_artifacts_html_to_pdf.return_value = b"fake_pdf_content"
-        result = client.simulate_post(
-            "/v1/do/artifacts/GenerateArtifact", json=test_data
-        )
-
-        # assert command returns valid status & response
-        json_response = json.loads(result.text)
-        assert json_response["command_response"]["http_status"] == "200"
-        assert json_response["command_response"]["body"]["private_link"]
-
-        # assert contents of pdf indirectly via call_args
-        html_content = mock_artifacts_html_to_pdf.call_args[0][0]
-
-        assert "lupDecisions_val" in html_content
-
-        # Test data
-        test_data = {
-            "id": "test-artifact-123",
-            "template": "blm-ce.html",
-            "data": {
-                "conformanceOption": "clearlyConsistent",
-                "managementGoalsObjectives": "managementGoalsObjectives_val",
-            },
-            "generate_links": False,
-            "callback": "id",
-            "storage": "s3",
-        }
-
-        # This will test the actual endpoint routing and basic flow
-        result = client.simulate_post(
-            f"{API_ENDPOINT}GenerateArtifact", json=test_data
-        )
-
-        # assert command returns valid status & response
-        json_response = json.loads(result.text)
-        assert json_response["command_response"]["http_status"] == "200"
-        assert json_response["command_response"]["body"]["private_link"]
-
-        # assert contents of pdf indirectly via call_args
-        html_content = mock_artifacts_html_to_pdf.call_args[0][0]
-
-        assert "managementGoalsObjectives_val" in html_content
+        assert "Approver 1, Approver 2" in html_content
+        assert "2023-09-29" in html_content

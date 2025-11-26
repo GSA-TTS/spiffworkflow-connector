@@ -57,10 +57,14 @@ class v1_do_artifacts_connector:
             # This is a total hack. The issue is that the user can enter any data whatsoever,
             # but that data is not formatted. In other words, we are trying to format an
             # arbitrary string.
-            template_data["exclusions"] = template_data["exclusionsText"].split('\n')
-            template_data["lupDecisions"] = template_data["lupDecisions"].split('\n')
-            template_data["responsibleOfficial"] = self.get_responsible_official_string(template_data["approvers"])
-            template_data["approvalDate"] = self.get_last_approval_date(template_data["approvers"])
+            template_data["exclusions"] = template_data["exclusionsText"].split("\n")
+            template_data["lupDecisions"] = template_data["lupDecisions"].split("\n")
+            template_data["responsibleOfficial"] = self.get_responsible_official_string(
+                template_data["approvers"]
+            )
+            template_data["approvalDate"] = self.get_last_approval_date(
+                template_data["approvers"]
+            )
 
             # Create PDF from template
             template = self.env.get_template(template_name)
