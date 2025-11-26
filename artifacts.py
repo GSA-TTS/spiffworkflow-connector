@@ -59,6 +59,8 @@ class v1_do_artifacts_connector:
             # arbitrary string.
             template_data["exclusions"] = template_data["exclusionsText"].split("\n")
             template_data["lupDecisions"] = template_data["lupDecisions"].split("\n")
+
+            # Parse out data from the approvers array
             template_data["responsibleOfficial"] = self.get_responsible_official_string(
                 template_data["approvers"]
             )
