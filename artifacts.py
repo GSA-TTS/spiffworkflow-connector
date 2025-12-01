@@ -75,7 +75,7 @@ class v1_do_artifacts_connector:
             template = self.env.get_template(template_name)
             rendered_document = template.render(template_data)
             pdf_buffer = await self._generate_pdf_with_attachments(
-                rendered_document, template_data["attachments"]
+                rendered_document, template_data.get("attachments", [])
             )
 
             # Prepare for S3 upload
