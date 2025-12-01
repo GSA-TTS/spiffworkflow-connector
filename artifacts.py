@@ -34,15 +34,6 @@ class v1_do_artifacts_connector:
     def get_last_approval_date(self, approvers: list[dict[str, Any]]):
         return approvers[-1]["date"]
 
-    def format_attachment(self, data_url: str):
-        print("\n\nATTACHMENT", data_url)
-        header, data = data_url.split(',', 1)
-        print('\n\nHEADER', header)
-        print('\n\nDATA', data)
-        # if header in []:  # TODO
-        #     return self.format_image_attachment(data_url, "png", 200)
-        return data_url
-
     async def on_post_generate_artifact(self, req, resp):
         """Handle the artifacts/GenerateArtifact command."""
         params = await req.media
@@ -78,15 +69,13 @@ class v1_do_artifacts_connector:
             template_data["approvalDate"] = self.get_last_approval_date(
                 template_data["approvers"]
             )
-            template_data["attachments"] = [
-                self.format_attachment(attachment)
-                for attachment in template_data["attachments"]
-            ]
 
             # Create PDF from template
             template = self.env.get_template(template_name)
             rendered_document = template.render(template_data)
-            pdf_buffer = await self._generate_pdf(rendered_document, template_data["attachments"])
+            pdf_buffer = await self._generate_pdf_with_attachments(
+                rendered_document, template_data["attachments"]
+            )
 
             # Prepare for S3 upload
             pdf_stream = io.BytesIO(pdf_buffer)
@@ -176,47 +165,44 @@ class v1_do_artifacts_connector:
 
         return response
 
-    async def _generate_pdf(self, html_content: str, attachments: list[str]) -> bytes:
-        """Create PDF from HTML content using Playwright."""
+    async def _generate_pdf_with_attachments(
+        self, html_content: str, attachments: list[str]
+    ) -> bytes:
+        """Create PDF from HTML content and attachments."""
+
+        # We will merge the form-data pdf with all attachments (which we render as separate pdfs).
         form_data_pdf: bytes = await self._html_to_pdf(html_content=html_content)
         attachment_pdfs: list[bytes] = []
+
         for index, data_url in enumerate(attachments):
-            # First, we will create a header page
-            header_html = f"""
-                <html>
-                    <body>
-                        <h4>Attachment {index + 1}</h4>
-                    </body>
-                </html>
-            """
-            header_pdf = await self._html_to_pdf(html_content=header_html)
-            attachment_pdfs.append(header_pdf)
-            
             file_type, payload_bytes = self._decode_data_url(data_url)
             if not file_type or payload_bytes is None:
+                # TODO: Better error handling!
                 logging.warning("Could not parse data URL for attachment %s", index + 1)
                 continue
 
+            # We create a separate header page for each attachment so that we do not have
+            # to, e.g., add a header to an attachment that is already a pdf.
+            attachment_cover_page_template = self.env.get_template("attachment-cover.html")
+            attachment_cover_page_html = attachment_cover_page_template.render(
+                {"attachmentNumber": index + 1}
+            )
+            attachment_cover_page_pdf = await self._html_to_pdf(
+                html_content=attachment_cover_page_html
+            )
+
+            # Now we get the attachment data itself as a pdf.
             attachment_pdf: Optional[bytes] = None
 
             if file_type.startswith("image/"):
-                # 2a) Image: embed via <img src="data:..."> and render with Playwright
-                img_html = f"""
-                    <html>
-                        <body style="margin:0; padding:0;">
-                            <img src="{data_url}"
-                                 style="max-width:100%; max-height:100%; object-fit:contain;" />
-                        </body>
-                    </html>
-                """
-                attachment_pdf = await self._html_to_pdf(html_content=img_html)
-
+                # For images, we embed the image into a pdf.
+                template = self.env.get_template("image-attachment.html")
+                rendered_image = template.render({"image_data": data_url})
+                attachment_pdf = await self._html_to_pdf(html_content=rendered_image)
             elif file_type == "application/pdf":
-                # 2b) PDF: use bytes as-is
+                # If the image is a pdf, we already have the pdf bytes.
                 attachment_pdf = payload_bytes
-
             else:
-                # 2c) Unknown: log but don't fail
                 logging.warning(
                     "Unsupported attachment type %s for attachment %s",
                     file_type,
@@ -224,7 +210,7 @@ class v1_do_artifacts_connector:
                 )
 
             if attachment_pdf:
-                attachment_pdfs.append(attachment_pdf)
+                attachment_pdfs += [attachment_cover_page_pdf, attachment_pdf]
 
         all_pdfs = [form_data_pdf] + attachment_pdfs
         merged_pdf_bytes = self._merge_pdfs(all_pdfs)
@@ -262,7 +248,7 @@ class v1_do_artifacts_connector:
             return None, None
 
         return mime_type, raw_bytes
-    
+
     def _merge_pdfs(self, pdf_buffers: list[bytes]) -> bytes:
         """Merge multiple PDF byte blobs into a single PDF."""
         writer = PdfWriter()
