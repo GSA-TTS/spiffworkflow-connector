@@ -38,7 +38,7 @@ def fake_filesystem():
                 <div class="content">
                     <p>Name: {{ name }}</p>
                     <p>Email: {{ email }}</p>
-                    <p>Date: {{ date }}</p>
+                    <p>Date: {{ approvalDate }}</p>
                     {% if amount %}
                     <p>Amount: ${{ amount }}</p>
                     {% endif %}
