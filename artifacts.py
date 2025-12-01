@@ -7,7 +7,6 @@ from typing import Any
 from jinja2 import Environment, FileSystemLoader
 from playwright.async_api import async_playwright
 
-from config import s3_config
 from s3utils import (
     create_s3_client,
     get_bucket_for_storage,
