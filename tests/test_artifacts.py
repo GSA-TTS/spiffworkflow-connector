@@ -38,7 +38,6 @@ class TestArtifactsService:
 
         # assert command returns valid status & response
         json_response = json.loads(result.text)
-        print(json_response)
         assert json_response["command_response"]["http_status"] == "200"
         assert json_response["command_response"]["body"]["private_link"]
 
@@ -118,7 +117,11 @@ class TestBLMSpecificFlows:
     @patch("artifacts.create_s3_client")
     @patch("artifacts.get_bucket_for_storage")
     def test_blm_artifact_general_payload(
-        self, mock_get_bucket, mock_create_s3_client, client, mock_artifacts_generate_pdf_with_attachments
+        self,
+        mock_get_bucket,
+        mock_create_s3_client,
+        client,
+        mock_artifacts_generate_pdf_with_attachments,
     ):
         test_data = {
             "id": "test-artifact-123",
