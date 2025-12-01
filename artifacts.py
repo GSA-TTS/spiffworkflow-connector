@@ -2,7 +2,11 @@ import os
 import json
 import io
 import logging
-from typing import Any
+from typing import Any, Optional
+
+from io import BytesIO
+import base64
+from pypdf import PdfReader, PdfWriter
 
 from jinja2 import Environment, FileSystemLoader
 from playwright.async_api import async_playwright
@@ -29,6 +33,15 @@ class v1_do_artifacts_connector:
 
     def get_last_approval_date(self, approvers: list[dict[str, Any]]):
         return approvers[-1]["date"]
+
+    def format_attachment(self, data_url: str):
+        print("\n\nATTACHMENT", data_url)
+        header, data = data_url.split(',', 1)
+        print('\n\nHEADER', header)
+        print('\n\nDATA', data)
+        # if header in []:  # TODO
+        #     return self.format_image_attachment(data_url, "png", 200)
+        return data_url
 
     async def on_post_generate_artifact(self, req, resp):
         """Handle the artifacts/GenerateArtifact command."""
@@ -65,11 +78,15 @@ class v1_do_artifacts_connector:
             template_data["approvalDate"] = self.get_last_approval_date(
                 template_data["approvers"]
             )
+            template_data["attachments"] = [
+                self.format_attachment(attachment)
+                for attachment in template_data["attachments"]
+            ]
 
             # Create PDF from template
             template = self.env.get_template(template_name)
             rendered_document = template.render(template_data)
-            pdf_buffer = await self._html_to_pdf(rendered_document)
+            pdf_buffer = await self._generate_pdf(rendered_document, template_data["attachments"])
 
             # Prepare for S3 upload
             pdf_stream = io.BytesIO(pdf_buffer)
@@ -159,8 +176,61 @@ class v1_do_artifacts_connector:
 
         return response
 
-    async def _html_to_pdf(self, html_content: str) -> bytes:
+    async def _generate_pdf(self, html_content: str, attachments: list[str]) -> bytes:
         """Create PDF from HTML content using Playwright."""
+        form_data_pdf: bytes = await self._html_to_pdf(html_content=html_content)
+        attachment_pdfs: list[bytes] = []
+        for index, data_url in enumerate(attachments):
+            # First, we will create a header page
+            header_html = f"""
+                <html>
+                    <body>
+                        <h4>Attachment {index + 1}</h4>
+                    </body>
+                </html>
+            """
+            header_pdf = await self._html_to_pdf(html_content=header_html)
+            attachment_pdfs.append(header_pdf)
+            
+            file_type, payload_bytes = self._decode_data_url(data_url)
+            if not file_type or payload_bytes is None:
+                logging.warning("Could not parse data URL for attachment %s", index + 1)
+                continue
+
+            attachment_pdf: Optional[bytes] = None
+
+            if file_type.startswith("image/"):
+                # 2a) Image: embed via <img src="data:..."> and render with Playwright
+                img_html = f"""
+                    <html>
+                        <body style="margin:0; padding:0;">
+                            <img src="{data_url}"
+                                 style="max-width:100%; max-height:100%; object-fit:contain;" />
+                        </body>
+                    </html>
+                """
+                attachment_pdf = await self._html_to_pdf(html_content=img_html)
+
+            elif file_type == "application/pdf":
+                # 2b) PDF: use bytes as-is
+                attachment_pdf = payload_bytes
+
+            else:
+                # 2c) Unknown: log but don't fail
+                logging.warning(
+                    "Unsupported attachment type %s for attachment %s",
+                    file_type,
+                    index + 1,
+                )
+
+            if attachment_pdf:
+                attachment_pdfs.append(attachment_pdf)
+
+        all_pdfs = [form_data_pdf] + attachment_pdfs
+        merged_pdf_bytes = self._merge_pdfs(all_pdfs)
+        return merged_pdf_bytes
+
+    async def _html_to_pdf(self, html_content) -> bytes:
         async with async_playwright() as p:
             browser = await p.chromium.launch()
             page = await browser.new_page()
@@ -168,3 +238,41 @@ class v1_do_artifacts_connector:
             pdf_buffer = await page.pdf()
             await browser.close()
             return pdf_buffer
+
+    def _decode_data_url(self, data_url: str) -> tuple[Optional[str], Optional[bytes]]:
+        """
+        Parse a data: URL like:
+            data:image/png;base64,iVBORw0KGgoAAA...
+        Returns (mime_type, raw_bytes) or (None, None) on failure.
+        """
+        try:
+            header, b64_data = data_url.split(",", 1)
+        except ValueError:
+            return None, None
+
+        if not header.startswith("data:") or ";base64" not in header:
+            return None, None
+
+        mime_type = header[5:].split(";", 1)[0]  # strip "data:" and take up to ';'
+
+        try:
+            raw_bytes = base64.b64decode(b64_data)
+        except Exception:
+            logging.exception("Failed to base64-decode data URL")
+            return None, None
+
+        return mime_type, raw_bytes
+    
+    def _merge_pdfs(self, pdf_buffers: list[bytes]) -> bytes:
+        """Merge multiple PDF byte blobs into a single PDF."""
+        writer = PdfWriter()
+
+        for pdf_bytes in pdf_buffers:
+            reader = PdfReader(BytesIO(pdf_bytes))
+            for page in reader.pages:
+                writer.add_page(page)
+
+        output = BytesIO()
+        writer.write(output)
+        output.seek(0)
+        return output.getvalue()

@@ -354,18 +354,6 @@
             List any other documents including but not limited to map(s), design
             features.
           </p>
-          {% if attachments %}
-            <div class="attachments">
-              {% for attachment in attachments %}
-                <div class="attachment-page" style="page-break-before: always;">
-                  <h4>Attachment {{ loop.index }}</h4>
-                  <img src="{{ attachment }}"
-                      alt="Attachment {{ loop.index }}"
-                      style="max-width: 100%; height: auto;" />
-                </div>
-              {% endfor %}
-            </div>
-          {% endif %}
         </section>
       </footer>
     </div>
