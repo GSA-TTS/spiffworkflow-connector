@@ -11,6 +11,7 @@ from pypdf import PdfReader, PdfWriter
 
 from jinja2 import Environment, FileSystemLoader
 from playwright.async_api import async_playwright
+from functools import wraps
 
 from s3utils import (
     create_s3_client,
@@ -22,141 +23,171 @@ from s3utils import (
 logger = logging.getLogger(__name__)
 
 
+def command_handler(error_context: str):
+    """
+    A decorator to standardize error handling for endpoints
+    """
+
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(self, req, resp, *args, **kwargs):
+            error = None
+
+            try:
+                response, status = await func(self, req, resp, *args, **kwargs)
+
+            except Exception as e:
+                logger.error(f"{error_context}: {e}", exc_info=True)
+                response = "error"
+                status = "500"
+                error = json.dumps({"error": str(e)})
+
+            resp.media = {
+                "command_response": {
+                    "body": response,
+                    "mimetype": "application/json",
+                    "http_status": status,
+                },
+                "command_response_version": 2,
+                "error": error,
+                "spiff__logs": [],
+            }
+
+        return wrapper
+
+    return decorator
+
+
+def check_required_parameters(
+    required_params: list[str], params: dict[str, Any]
+) -> None:
+    if not all([params[key] for key in required_params]):
+        errorMessage = (
+            "Missing required parameters: " + ", ".join(required_params) + " required"
+        )
+        raise ValueError(errorMessage)
+
+
 class v1_do_artifacts_connector:
     def __init__(self):
         self.template_path = os.path.abspath("./templates")
         self.env = Environment(loader=FileSystemLoader(self.template_path))
 
-    def get_responsible_official_string(self, approvers: list[dict[str, Any]]):
+    @command_handler("Error generating HTML Preview")
+    async def on_post_generate_html_preview(self, req, resp):
+        """Handle the artifacts/GenerateHtmlPreview command"""
+        params = await req.media
+        check_required_parameters(["template"], params)
+        # Extract parameters
+        template_name = params.get("template")
+        template_data = params.get("data")
+        task_data = params.get("spiff__task_data")
+        rendered_document = self._render_template_html(
+            template_name, template_data, task_data
+        )
+        # Generate response
+        response = {"previewData": rendered_document}
+        status = "200"
+        return response, status
+
+    @command_handler("Error generating artifact")
+    async def on_post_generate_artifact(self, req, resp):
+        """Handle the artifacts/GenerateArtifact command."""
+        params = await req.media
+        check_required_parameters(["id", "template"], params)
+
+        # Extract parameters
+        artifact_id = params.get("id")
+        template_name = params.get("template")
+        template_data = params.get("data")
+        generate_links = params.get("generate_links", False)
+        storage = params.get("storage")
+        task_data = params.get("spiff__task_data")
+        attachments = template_data.get("attachments", [])
+
+        # Create PDF from template
+        rendered_document = self._render_template_html(
+            template_name, template_data, task_data
+        )
+        pdf_buffer = await self._generate_pdf_with_attachments(
+            rendered_document, attachments
+        )
+
+        # Prepare for S3 upload
+        pdf_stream = io.BytesIO(pdf_buffer)
+        pdf_stream.seek(0)
+
+        # Get S3 client and bucket
+        s3_client = create_s3_client(storage)
+        bucket = get_bucket_for_storage(storage)
+
+        # Upload to S3
+        s3_client.put_object(Bucket=bucket, Key=artifact_id, Body=pdf_stream)
+
+        # Generate response
+        response = self._generate_artifact_response(
+            s3_client, bucket, artifact_id, generate_links
+        )
+        status = "200"
+        return response, status
+
+    @command_handler("Error generating link")
+    async def on_post_get_link(self, req, resp):
+        """Handle the artifacts/GetLinkToArtifact command."""
+        params = await req.media
+        # Extract parameters
+        artifact_id = params.get("id")
+        storage = params.get("storage")
+
+        if not artifact_id:
+            raise ValueError("Missing required parameter: id")
+
+        # Get S3 client and bucket
+        s3_client = create_s3_client(storage)
+        bucket = get_bucket_for_storage(storage)
+
+        # Verify object exists
+        s3_client.head_object(Bucket=bucket, Key=artifact_id)
+
+        # Generate response
+        response = self._generate_artifact_response(
+            s3_client, bucket, artifact_id, True
+        )
+        status = "200"
+        return response, status
+
+    def _render_template_html(self, template_name, template_data, task_data) -> str:
+        if not (template_data):
+            logger.info("Template data is not provided, using task_data instead")
+            template_data = task_data
+
+        attachments = template_data.get("attachments", [])
+
+        # This is a total hack. The issue is that the user can enter any string,
+        # so we are trying to format an arbitrary string.
+        template_data["exclusions"] = template_data["exclusionsText"].split("\n")
+        template_data["lupDecisions"] = template_data["lupDecisions"].split("\n")
+
+        # Parse out data from the approvers array
+        template_data["responsibleOfficial"] = self._get_responsible_official_string(
+            template_data["approvers"]
+        )
+        template_data["approvalDate"] = self._get_last_approval_date(
+            template_data["approvers"]
+        )
+        template_data["numberOfAttachments"] = len(attachments)
+
+        # Create PDF from template
+        template = self.env.get_template(template_name)
+        return template.render(template_data)
+
+    def _get_responsible_official_string(self, approvers: list[dict[str, Any]]):
         # This is fragile. We get the last two approvers from the approvers list
         # and render them like {Name 1}, {Name 2}
         return ", ".join([approver["name"] for approver in approvers[-2:]])
 
-    def get_last_approval_date(self, approvers: list[dict[str, Any]]):
+    def _get_last_approval_date(self, approvers: list[dict[str, Any]]):
         return approvers[-1]["date"]
-
-    async def on_post_generate_artifact(self, req, resp):
-        """Handle the artifacts/GenerateArtifact command."""
-        params = await req.media
-        error = None
-
-        try:
-            # Extract parameters
-            artifact_id = params.get("id")
-            template_name = params.get("template")
-            template_data = params.get("data")
-            generate_links = params.get("generate_links", False)
-            storage = params.get("storage")
-            task_data = params.get("spiff__task_data")
-
-            if not all([artifact_id, template_name]):
-                raise ValueError(
-                    "Missing required parameters: id and template are required"
-                )
-
-            if not (template_data):
-                logger.info("Template data is not provided, using task_data instead")
-                template_data = task_data
-
-            attachments = template_data.get("attachments", [])
-
-            # This is a total hack. The issue is that the user can enter any string,
-            # so we are trying to format an arbitrary string.
-            template_data["exclusions"] = template_data["exclusionsText"].split("\n")
-            template_data["lupDecisions"] = template_data["lupDecisions"].split("\n")
-
-            # Parse out data from the approvers array
-            template_data["responsibleOfficial"] = self.get_responsible_official_string(
-                template_data["approvers"]
-            )
-            template_data["approvalDate"] = self.get_last_approval_date(
-                template_data["approvers"]
-            )
-            template_data["numberOfAttachments"] = len(attachments)
-
-            # Create PDF from template
-            template = self.env.get_template(template_name)
-            rendered_document = template.render(template_data)
-            pdf_buffer = await self._generate_pdf_with_attachments(
-                rendered_document, attachments
-            )
-
-            # Prepare for S3 upload
-            pdf_stream = io.BytesIO(pdf_buffer)
-            pdf_stream.seek(0)
-
-            # Get S3 client and bucket
-            s3_client = create_s3_client(storage)
-            bucket = get_bucket_for_storage(storage)
-
-            # Upload to S3
-            s3_client.put_object(Bucket=bucket, Key=artifact_id, Body=pdf_stream)
-
-            # Generate response
-            response = self._generate_artifact_response(
-                s3_client, bucket, artifact_id, generate_links
-            )
-            status = "200"
-
-        except Exception as e:
-            logger.error(f"Error generating artifact: {e}")
-            response = "error"
-            error = json.dumps({"error": str(e)})
-            status = "500"
-
-        resp.media = {
-            "command_response": {
-                "body": response,
-                "mimetype": "application/json",
-                "http_status": status,
-            },
-            "command_response_version": 2,
-            "error": error,
-            "spiff__logs": [],
-        }
-
-    async def on_post_get_link(self, req, resp):
-        """Handle the artifacts/GetLinkToArtifact command."""
-        params = await req.media
-        error = None
-
-        try:
-            # Extract parameters
-            artifact_id = params.get("id")
-            storage = params.get("storage")
-
-            if not artifact_id:
-                raise ValueError("Missing required parameter: id")
-
-            # Get S3 client and bucket
-            s3_client = create_s3_client(storage)
-            bucket = get_bucket_for_storage(storage)
-
-            # Verify object exists
-            s3_client.head_object(Bucket=bucket, Key=artifact_id)
-
-            # Generate response
-            response = self._generate_artifact_response(
-                s3_client, bucket, artifact_id, True
-            )
-            status = "200"
-
-        except Exception as e:
-            logger.error(f"Error generating link: {e}")
-            response = "error"
-            error = json.dumps({"error": str(e)})
-            status = "500"
-
-        resp.media = {
-            "command_response": {
-                "body": response,
-                "mimetype": "application/json",
-                "http_status": status,
-            },
-            "command_response_version": 2,
-            "error": error,
-            "spiff__logs": [],
-        }
 
     def _generate_artifact_response(
         self, s3_client, bucket: str, key: str, include_presigned: bool
