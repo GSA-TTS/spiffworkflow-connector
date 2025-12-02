@@ -1,0 +1,136 @@
+<style>
+  /* Screen styles */
+  html {
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  /* Base list styles */
+  html {
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  ol.list-upper-alpha {
+    list-style-type: upper-alpha;
+  }
+  ol.list-upper-alpha li ol {
+    list-style-type: lower-alpha;
+    margin: auto 1rem;
+  }
+  ol.list-upper-alpha > li > h3 {
+    font-weight: bold;
+    margin: 0 0 0.5rem 0;
+  }
+  ol.list-upper-alpha ::marker {
+    font-weight: bold;
+  }
+  ol.list-upper-alpha span {
+    font-weight: bold;
+  }
+  ol.list-upper-alpha span::after {
+    content: "\A";
+    white-space: pre;
+  }
+  ol.list-upper-alpha > li > h3::after {
+    content: "\A";
+    white-space: pre;
+  }
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #000;
+    color: #fff;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 0 0 4px 0;
+    z-index: 100;
+  }
+  .skip-link:focus {
+    top: 0;
+  }
+  /* Accessibility settings */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  /* Print styles for print*/
+  @media print {
+    /* reset and base styles*/
+    * {
+      background: transparent !important;
+      color: #000 !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+    /* Page setup */
+    .container {
+      margin-left: 0 !important;
+      padding-left: 0 !important;
+    }
+    ol.list-upper-alpha {
+      padding-left: 1.5em !important;
+      margin-left: 0 !;
+    }
+    @page {
+      size: letter;
+      margin: 1in;
+      @top-right {
+        content: "{{projectTitle}}";
+        font-size: 10pt;
+      }
+      @bottom-right {
+        content: counter(page);
+        font-size: 10pt;
+      }
+      @bottom-left {
+        content: "Categoral Exclusion " "{{categoricalExclusionID}}";
+        font-size: 10pt;
+      }
+    }
+    /* Typography for print */
+    body {
+      font-size: 12pt;
+      line-height: 1.5;
+      font-family: arial, helvetica, sans-serif;
+      color: #000;
+    }
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-family: Arial, Helvetica, sans-serif;
+      page-break-after: avoid;
+      page-break-inside: avoid;
+    }
+    p,
+    li {
+      orphans: 3;
+      widows: 3;
+    }
+    .skip-link {
+      display: none !important;
+    }
+
+    /* section headers */
+    ol.list-upper-alpha > li > h3 {
+      font-size: 14pt;
+      font-weight: bold;
+      display: block;
+      margin-bottom: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    /* logo handling */
+    img[src*="logo"] {
+      max-width: 100px !important;
+      height: auto !important;
+      print-color-adjust: exact;
+    }
+  }
+</style>

@@ -14,7 +14,7 @@ dependencies = [
     "orjson>=3.11.3",
     "playwright>=1.55.0",
     "pyinstrument>=5.1.1",
-    "pymupdf>=1.26.6",
+    "pypdf>=6.4.0",
     "watchfiles>=1.1.0",
 ]
 

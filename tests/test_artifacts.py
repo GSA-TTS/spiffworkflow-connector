@@ -13,7 +13,7 @@ class TestArtifactsService:
         mock_create_s3_client,
         client,
         mock_artifacts_env,
-        mock_artifacts_html_to_pdf,
+        mock_artifacts_generate_pdf_with_attachments,
     ):
         test_data = {
             "id": "test-artifact-123",
@@ -33,7 +33,7 @@ class TestArtifactsService:
             "storage": "s3",
         }
 
-        mock_artifacts_html_to_pdf.return_value = b"fake_pdf_content"
+        mock_artifacts_generate_pdf_with_attachments.return_value = b"fake_pdf_content"
         result = client.simulate_post(f"{API_ENDPOINT}GenerateArtifact", json=test_data)
 
         # assert command returns valid status & response
@@ -42,7 +42,7 @@ class TestArtifactsService:
         assert json_response["command_response"]["body"]["private_link"]
 
         # assert contents of pdf indirectly via call_args
-        html_content = mock_artifacts_html_to_pdf.call_args[0][0]
+        html_content = mock_artifacts_generate_pdf_with_attachments.call_args[0][0]
 
         # Verify the template was properly rendered
         assert "Test Template" in html_content
@@ -58,7 +58,7 @@ class TestArtifactsService:
         mock_create_s3_client,
         client,
         mock_artifacts_env,
-        mock_artifacts_html_to_pdf,
+        mock_artifacts_generate_pdf_with_attachments,
         mock_artifacts_generate_response_mock,
     ):
         test_data = {
@@ -78,7 +78,7 @@ class TestArtifactsService:
             "storage": "s3",
         }
 
-        mock_artifacts_html_to_pdf.return_value = b"fake_pdf_content"
+        mock_artifacts_generate_pdf_with_attachments.return_value = b"fake_pdf_content"
         mock_artifacts_generate_response_mock.return_value = {
             "private_link": "s3://test-bucket/invoice-123",
             "presigned_link": "https://example.com/presigned-url",
@@ -92,7 +92,7 @@ class TestArtifactsService:
         assert json_response["command_response"]["body"]["presigned_link"]
 
         # Verify the HTML content contains invoice data
-        html_content = mock_artifacts_html_to_pdf.call_args[0][0]
+        html_content = mock_artifacts_generate_pdf_with_attachments.call_args[0][0]
         assert "Test Template" in html_content
         assert "John Doe" in html_content
         assert "john@example.com" in html_content
@@ -117,7 +117,11 @@ class TestBLMSpecificFlows:
     @patch("artifacts.create_s3_client")
     @patch("artifacts.get_bucket_for_storage")
     def test_blm_artifact_general_payload(
-        self, mock_get_bucket, mock_create_s3_client, client, mock_artifacts_html_to_pdf
+        self,
+        mock_get_bucket,
+        mock_create_s3_client,
+        client,
+        mock_artifacts_generate_pdf_with_attachments,
     ):
         test_data = {
             "id": "test-artifact-123",
@@ -162,7 +166,7 @@ class TestBLMSpecificFlows:
             "storage": "s3",
         }
 
-        mock_artifacts_html_to_pdf.return_value = b"fake_pdf_content"
+        mock_artifacts_generate_pdf_with_attachments.return_value = b"fake_pdf_content"
         result = client.simulate_post(f"{API_ENDPOINT}GenerateArtifact", json=test_data)
 
         # assert command returns valid status & response
@@ -171,7 +175,7 @@ class TestBLMSpecificFlows:
         assert json_response["command_response"]["body"]["private_link"]
 
         # assert contents of pdf indirectly via call_args
-        html_content = mock_artifacts_html_to_pdf.call_args[0][0]
+        html_content = mock_artifacts_generate_pdf_with_attachments.call_args[0][0]
 
         for item in test_data["data"]:
             if item not in ["lupDecisions", "approvers", "exclusionsText"]:

@@ -2,7 +2,12 @@ import os
 import json
 import io
 import logging
-from typing import Any
+from typing import Any, Optional
+from playwright.async_api import Browser
+
+from io import BytesIO
+import base64
+from pypdf import PdfReader, PdfWriter
 
 from jinja2 import Environment, FileSystemLoader
 from playwright.async_api import async_playwright
@@ -53,6 +58,8 @@ class v1_do_artifacts_connector:
                 logger.info("Template data is not provided, using task_data instead")
                 template_data = task_data
 
+            attachments = template_data.get("attachments", [])
+
             # This is a total hack. The issue is that the user can enter any string,
             # so we are trying to format an arbitrary string.
             template_data["exclusions"] = template_data["exclusionsText"].split("\n")
@@ -65,11 +72,14 @@ class v1_do_artifacts_connector:
             template_data["approvalDate"] = self.get_last_approval_date(
                 template_data["approvers"]
             )
+            template_data["numberOfAttachments"] = len(attachments)
 
             # Create PDF from template
             template = self.env.get_template(template_name)
             rendered_document = template.render(template_data)
-            pdf_buffer = await self._html_to_pdf(rendered_document)
+            pdf_buffer = await self._generate_pdf_with_attachments(
+                rendered_document, attachments
+            )
 
             # Prepare for S3 upload
             pdf_stream = io.BytesIO(pdf_buffer)
@@ -159,12 +169,110 @@ class v1_do_artifacts_connector:
 
         return response
 
-    async def _html_to_pdf(self, html_content: str) -> bytes:
-        """Create PDF from HTML content using Playwright."""
+    async def _generate_pdf_with_attachments(
+        self, html_content: str, attachments: list[str]
+    ) -> bytes:
+        """Create PDF from HTML content and attachments."""
         async with async_playwright() as p:
-            browser = await p.chromium.launch()
-            page = await browser.new_page()
-            await page.set_content(html_content)
-            pdf_buffer = await page.pdf()
+            browser = (
+                await p.chromium.launch()
+            )  # Note: probably better to cache this at the class level?
+
+            # We will merge the form-data pdf with all attachments (which we render as separate pdfs).
+            form_data_pdf: bytes = await self._html_to_pdf(
+                html_content=html_content, browser=browser
+            )
+            attachment_pdfs: list[bytes] = []
+
+            for index, data_url in enumerate(attachments):
+                file_type, payload_bytes = self._decode_data_url(data_url)
+                if not file_type or payload_bytes is None:
+                    # TODO: Better error handling!
+                    logging.warning(
+                        "Could not parse data URL for attachment %s", index + 1
+                    )
+                    continue
+
+                # We create a separate header page for each attachment so that we do not have
+                # to, e.g., add a header to an attachment that is already a pdf.
+                attachment_cover_page_template = self.env.get_template(
+                    "attachment-cover.html"
+                )
+                attachment_cover_page_html = attachment_cover_page_template.render(
+                    {"attachmentNumber": index + 1}
+                )
+                attachment_cover_page_pdf = await self._html_to_pdf(
+                    html_content=attachment_cover_page_html, browser=browser
+                )
+
+                # Now we get the attachment data itself as a pdf.
+                attachment_pdf: Optional[bytes] = None
+
+                if file_type.startswith("image/"):
+                    # For images, we embed the image into a pdf.
+                    template = self.env.get_template("image-attachment.html")
+                    rendered_image = template.render({"image_data": data_url})
+                    attachment_pdf = await self._html_to_pdf(
+                        html_content=rendered_image, browser=browser
+                    )
+                elif file_type == "application/pdf":
+                    # If the image is a pdf, we already have the pdf bytes.
+                    attachment_pdf = payload_bytes
+                else:
+                    logging.warning(
+                        "Unsupported attachment type %s for attachment %s",
+                        file_type,
+                        index + 1,
+                    )
+
+                if attachment_pdf:
+                    attachment_pdfs += [attachment_cover_page_pdf, attachment_pdf]
+
+            all_pdfs = [form_data_pdf] + attachment_pdfs
+            merged_pdf_bytes = self._merge_pdfs(all_pdfs)
             await browser.close()
-            return pdf_buffer
+            return merged_pdf_bytes
+
+    async def _html_to_pdf(self, html_content: str, browser: Browser) -> bytes:
+        page = await browser.new_page()
+        await page.set_content(html_content)
+        pdf_buffer = await page.pdf()
+        return pdf_buffer
+
+    def _decode_data_url(self, data_url: str) -> tuple[Optional[str], Optional[bytes]]:
+        """
+        Parse a data: URL like:
+            data:image/png;base64,iVBORw0KGgoAAA...
+        Returns (mime_type, raw_bytes) or (None, None) on failure.
+        """
+        try:
+            header, b64_data = data_url.split(",", 1)
+        except ValueError:
+            return None, None
+
+        if not header.startswith("data:") or ";base64" not in header:
+            return None, None
+
+        mime_type = header[5:].split(";", 1)[0]  # strip "data:" and take up to ';'
+
+        try:
+            raw_bytes = base64.b64decode(b64_data)
+        except Exception:
+            logging.exception("Failed to base64-decode data URL")
+            return None, None
+
+        return mime_type, raw_bytes
+
+    def _merge_pdfs(self, pdf_buffers: list[bytes]) -> bytes:
+        """Merge multiple PDF byte blobs into a single PDF."""
+        writer = PdfWriter()
+
+        for pdf_bytes in pdf_buffers:
+            reader = PdfReader(BytesIO(pdf_bytes))
+            for page in reader.pages:
+                writer.add_page(page)
+
+        output = BytesIO()
+        writer.write(output)
+        output.seek(0)
+        return output.getvalue()

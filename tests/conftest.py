@@ -71,11 +71,11 @@ def mock_artifacts_env(fake_filesystem):
 
 
 @pytest.fixture
-def mock_artifacts_html_to_pdf():
+def mock_artifacts_generate_pdf_with_attachments():
     """
-    A fixture for mocking artifacts._html_to_pdf
+    A fixture for mocking artifacts._generate_pdf_with_attachments
     """
-    with patch.object(artifacts, "_html_to_pdf") as mock:
+    with patch.object(artifacts, "_generate_pdf_with_attachments") as mock:
         mock.return_value = b"fake_pdf_content"  # default, override in test if needed
         yield mock
 
