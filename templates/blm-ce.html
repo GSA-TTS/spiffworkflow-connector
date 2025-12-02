@@ -216,8 +216,11 @@
         <section class="mt-3">
           <h3 class="font-bold">ATTACHMENTS:</h3>
           <p>
-            List any other documents including but not limited to map(s), design
-            features.
+            {% if numberOfAttachments == 1 %}
+            {{ numberOfAttachments }} attachment is attached below.
+            {% else %}
+            {{ numberOfAttachments }} attachments are attached below.
+            {% endif %}
           </p>
         </section>
       </footer>

@@ -58,6 +58,8 @@ class v1_do_artifacts_connector:
                 logger.info("Template data is not provided, using task_data instead")
                 template_data = task_data
 
+            attachments = template_data.get("attachments", [])
+
             # This is a total hack. The issue is that the user can enter any string,
             # so we are trying to format an arbitrary string.
             template_data["exclusions"] = template_data["exclusionsText"].split("\n")
@@ -70,12 +72,13 @@ class v1_do_artifacts_connector:
             template_data["approvalDate"] = self.get_last_approval_date(
                 template_data["approvers"]
             )
+            template_data["numberOfAttachments"] = len(attachments)
 
             # Create PDF from template
             template = self.env.get_template(template_name)
             rendered_document = template.render(template_data)
             pdf_buffer = await self._generate_pdf_with_attachments(
-                rendered_document, template_data.get("attachments", [])
+                rendered_document, attachments
             )
 
             # Prepare for S3 upload
