@@ -109,7 +109,9 @@ artifacts = v1_do_artifacts_connector()
 app.add_route(
     "/v1/do/artifacts/GenerateArtifact", artifacts, suffix="generate_artifact"
 )
-app.add_route("/v1/do/artifacts/GenerateHtmlPreview", artifacts, suffix="generate_html_preview")
+app.add_route(
+    "/v1/do/artifacts/GenerateHtmlPreview", artifacts, suffix="generate_html_preview"
+)
 app.add_route("/v1/do/artifacts/GetLinkToArtifact", artifacts, suffix="get_link")
 
 #

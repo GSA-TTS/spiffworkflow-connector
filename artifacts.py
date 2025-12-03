@@ -4,6 +4,7 @@ import io
 import logging
 from typing import Any, Optional
 from playwright.async_api import Browser
+import html
 
 from io import BytesIO
 import base64
@@ -85,8 +86,15 @@ class v1_do_artifacts_connector:
         rendered_document = self._render_template_html(
             template_name, template_data, task_data
         )
+
+        # We escape and encode the HTML as base64 so it can more easily be used as a data URL in an iframe
+        rendered_document_base64 = base64.b64encode(
+            rendered_document.encode()
+        ).decode()
+        rendered_document_escaped_base64 = html.escape(rendered_document_base64)
+
         # Generate response
-        response = {"previewData": rendered_document}
+        response = {"previewData": rendered_document_escaped_base64}
         status = "200"
         return response, status
 
@@ -109,6 +117,7 @@ class v1_do_artifacts_connector:
         rendered_document = self._render_template_html(
             template_name, template_data, task_data
         )
+
         pdf_buffer = await self._generate_pdf_with_attachments(
             rendered_document, attachments
         )
