@@ -334,8 +334,6 @@ class v1_do_artifacts_connector:
             logger.info("Template data is not provided, using task_data instead")
             template_data = task_data
 
-        print("\n\nRAW TEMPLATE DATA", template_data)
-
         attachments = template_data.get("attachments", [])
 
         # This is a total hack. The issue is that the user can enter any string,
@@ -352,7 +350,7 @@ class v1_do_artifacts_connector:
         )
         # This assumes associated documents will be attachments
         template_data["numberOfAttachments"] = len(attachments) + len(
-            ASSOCIATED_DOCUMENTS_MAP[template_name]
+            ASSOCIATED_DOCUMENTS_MAP.get(template_name, [])
         )
 
         # Format the ID Team Checklist data
