@@ -109,6 +109,9 @@ artifacts = v1_do_artifacts_connector()
 app.add_route(
     "/v1/do/artifacts/GenerateArtifact", artifacts, suffix="generate_artifact"
 )
+app.add_route(
+    "/v1/do/artifacts/GenerateHtmlPreview", artifacts, suffix="generate_html_preview"
+)
 app.add_route("/v1/do/artifacts/GetLinkToArtifact", artifacts, suffix="get_link")
 
 #
@@ -121,6 +124,12 @@ generate_artifact_params = [
     {"id": "data", "type": "dict", "required": True},
     {"id": "generate_links", "type": "bool", "required": False},
     {"id": "storage", "type": "str", "required": False},
+]
+
+generate_html_preview_params = [
+    {"id": "id", "type": "str", "required": True},
+    {"id": "template", "type": "str", "required": True},
+    {"id": "data", "type": "dict", "required": True},
 ]
 
 get_link_params = [
@@ -158,5 +167,6 @@ embedded_connectors = [
     {"id": "http/PostRequest", "parameters": http_rw_params},
     {"id": "http/PutRequest", "parameters": http_rw_params},
     {"id": "artifacts/GenerateArtifact", "parameters": generate_artifact_params},
+    {"id": "artifacts/GenerateHtmlPreview", "parameters": generate_html_preview_params},
     {"id": "artifacts/GetLinkToArtifact", "parameters": get_link_params},
 ]

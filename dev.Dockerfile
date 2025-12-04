@@ -21,6 +21,10 @@ RUN uv sync --frozen
 # Install Playwright browser
 RUN uv run playwright install chromium --with-deps --only-shell
 
+COPY *.py .
+COPY ./bin ./bin/
+COPY ./templates ./templates/
+
 # Install minio client
 RUN wget https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc && \
   chmod +x /usr/local/bin/mc

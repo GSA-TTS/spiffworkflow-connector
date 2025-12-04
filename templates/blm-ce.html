@@ -50,51 +50,44 @@
               {{leaseSerialCaseFileNumber}} <br />Applicant: {{applicant}}
             </p>
           </li>
-
           <li>
             <h3>Description of Proposed Action:</h3>
             <p>{{projectDescription}}</p>
           </li>
-
           <li>
             <h3>Land Use Plan Conformance:</h3>
             <p>
-              Land Use Plan Name: {{landUsePlanName}}
-              <br />Date Approved: {{dateApproved}} <br />The proposed action is
-              in conformance with the applicable LUP because...
-              <br />
-              <br />
-              {% for decision in lupDecisions %}
-                <p>{{ decision }}</p>
-                <br />
-              {% endfor %}
+              Land Use Plan Name: {{ landUsePlanName }}<br />
+              Date Approved: {{ dateApproved }}<br />
+              The proposed action is in conformance with the applicable LUP
+              because...
             </p>
+            {% for decision in lupDecisions %}
+            <p style="margin-top: 0.5em">{{ decision }}</p>
+            {% endfor %}
           </li>
-
           <li>
             <h3>Compliance with NEPA:</h3>
             <p>
               The Proposed Action is categorically excluded from further
               documentation under the National Environmental Policy Act (NEPA)
               in accordance with:
-              <br />
-              <br />
-              {% for exclusion in exclusions %}
-                <p>{{ exclusion }}</p>
-                <br />
-              {% endfor %}
-              We recommend that you approach adoption
-              of a CX determination similarly to adopting another agency's EA or
-              EIS and coordinated on development of a single document that
-              addresses both agencies' requirements and is signed by both
-              agencies. However, if this is not feasible, you may adopt a CX
-              determination through additional documentation that shows
-              determination of the proposed action as substantially the same as
-              the action covered by the original CX and that no DOI
-              extraordinary circumstances are present (40 CFR 1506.3(d)(1)).
+            </p>
+            {% for exclusion in exclusions %}
+            <p style="margin-top: 0.5em">{{ exclusion }}</p>
+            {% endfor %}
+            <p>
+              We recommend that you approach adoption of a CX determination
+              similarly to adopting another agency's EA or EIS and coordinated
+              on development of a single document that addresses both agencies'
+              requirements and is signed by both agencies. However, if this is
+              not feasible, you may adopt a CX determination through additional
+              documentation that shows determination of the proposed action as
+              substantially the same as the action covered by the original CX
+              and that no DOI extraordinary circumstances are present (40 CFR
+              1506.3(d)(1)).
             </p>
           </li>
-
           <li>
             <h3>Extraordinary Circumstances Review:</h3>
             <p>The proposed action will not:</p>
@@ -137,11 +130,6 @@
                   Have a direct relationship to other actions with individually
                   insignificant but cumulatively significant environmental
                   effects.
-                </h4>
-                <h4>
-                  Have significant impacts on properties listed, or eligible for
-                  listing, on the National Register of Historic Places as
-                  determined by the bureau.
                 </h4>
                 <p><strong>Rationale:</strong> {{cumulativeImpacts}}</p>
               </li>
@@ -186,7 +174,6 @@
               {{categoricalExclusionJustification}}
             </p>
           </li>
-
           <li>
             <h3>Signature</h3>
             <div aria-label="Signature area">>>> signature goes here</div>
@@ -200,7 +187,6 @@
             <strong>Date:</strong> {{approvalDate}}
           </p>
         </section>
-
         <section class="mt-3">
           <h3 class="font-bold">Contact Person</h3>
           <p>
@@ -212,17 +198,16 @@
             {{officeName}} {{mailingAddress}} {{telephoneNumber}}
           </address>
         </section>
-
+        {% if numberOfAttachments > 0 %}
         <section class="mt-3">
           <h3 class="font-bold">ATTACHMENTS:</h3>
           <p>
-            {% if numberOfAttachments == 1 %}
-            {{ numberOfAttachments }} attachment is attached below.
-            {% else %}
-            {{ numberOfAttachments }} attachments are attached below.
-            {% endif %}
+            {% if numberOfAttachments == 1 %} {{ numberOfAttachments }}
+            attachment is attached below. {% else %} {{ numberOfAttachments }}
+            attachments are attached below. {% endif %}
           </p>
         </section>
+        {% endif %}
       </footer>
     </div>
   </body>
