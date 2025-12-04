@@ -232,7 +232,7 @@ class v1_do_artifacts_connector:
                     "attachment-cover.html"
                 )
                 attachment_cover_page_html = attachment_cover_page_template.render(
-                    {"attachmentNumber": len(attachment_pdfs) + 1}
+                    {"attachmentNumber": len(attachment_pdfs) // 2 + 1}
                 )
                 attachment_cover_page_pdf = await self._html_to_pdf(
                     html_content=attachment_cover_page_html, browser=browser
