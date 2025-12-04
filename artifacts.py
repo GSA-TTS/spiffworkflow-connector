@@ -23,6 +23,9 @@ from s3utils import (
 
 logger = logging.getLogger(__name__)
 
+# For a given key, specify any attachment templates associated with the main template
+ASSOCIATED_DOCUMENTS_MAP = {"blm-ce.html": ["blm-id-checklist.html"]}
+
 
 def command_handler(error_context: str):
     """
@@ -83,14 +86,15 @@ class v1_do_artifacts_connector:
         template_name = params.get("template")
         template_data = params.get("data")
         task_data = params.get("spiff__task_data")
-        rendered_document = self._render_template_html(
+
+        template_data = self._format_template_data(
             template_name, template_data, task_data
         )
 
+        rendered_document = self._render_template_html(template_name, template_data)
+
         # We escape and encode the HTML as base64 so it can more easily be used as a data URL in an iframe
-        rendered_document_base64 = base64.b64encode(
-            rendered_document.encode()
-        ).decode()
+        rendered_document_base64 = base64.b64encode(rendered_document.encode()).decode()
         rendered_document_escaped_base64 = html.escape(rendered_document_base64)
 
         # Generate response
@@ -113,13 +117,26 @@ class v1_do_artifacts_connector:
         task_data = params.get("spiff__task_data")
         attachments = template_data.get("attachments", [])
 
-        # Create PDF from template
-        rendered_document = self._render_template_html(
+        template_data = self._format_template_data(
             template_name, template_data, task_data
         )
 
+        # Render the HTML for the main template
+        rendered_document = self._render_template_html(template_name, template_data)
+
+        # Render the HTML for any attachments associated with the main template
+        # These are attachments that are *always* added to the document, not attachments
+        # a user has uploaded.
+        associated_documents: list[str] = []
+        for associated_document_template in ASSOCIATED_DOCUMENTS_MAP.get(
+            template_name, []
+        ):
+            associated_documents.append(
+                self._render_template_html(associated_document_template, template_data)
+            )
+
         pdf_buffer = await self._generate_pdf_with_attachments(
-            rendered_document, attachments
+            rendered_document, associated_documents, attachments
         )
 
         # Prepare for S3 upload
@@ -165,28 +182,8 @@ class v1_do_artifacts_connector:
         status = "200"
         return response, status
 
-    def _render_template_html(self, template_name, template_data, task_data) -> str:
-        if not (template_data):
-            logger.info("Template data is not provided, using task_data instead")
-            template_data = task_data
-
-        attachments = template_data.get("attachments", [])
-
-        # This is a total hack. The issue is that the user can enter any string,
-        # so we are trying to format an arbitrary string.
-        template_data["exclusions"] = template_data["exclusionsText"].split("\n")
-        template_data["lupDecisions"] = template_data["lupDecisions"].split("\n")
-
-        # Parse out data from the approvers array
-        template_data["responsibleOfficial"] = self._get_responsible_official_string(
-            template_data["approvers"]
-        )
-        template_data["approvalDate"] = self._get_last_approval_date(
-            template_data["approvers"]
-        )
-        template_data["numberOfAttachments"] = len(attachments)
-
-        # Create PDF from template
+    def _render_template_html(self, template_name, template_data) -> str:
+        # Transform the data for rendering in the template
         template = self.env.get_template(template_name)
         return template.render(template_data)
 
@@ -210,9 +207,13 @@ class v1_do_artifacts_connector:
         return response
 
     async def _generate_pdf_with_attachments(
-        self, html_content: str, attachments: list[str]
+        self, document: str, associated_documents: list[str], attachments: list[str]
     ) -> bytes:
-        """Create PDF from HTML content and attachments."""
+        """
+        Generate a PDF: document is the main HTML to render, associated_documents is a list
+        of other HTML documents to render afterwards, and attachments is a list of
+        use-uploaded documents to add as attachments.
+        """
         async with async_playwright() as p:
             browser = (
                 await p.chromium.launch()
@@ -220,10 +221,33 @@ class v1_do_artifacts_connector:
 
             # We will merge the form-data pdf with all attachments (which we render as separate pdfs).
             form_data_pdf: bytes = await self._html_to_pdf(
-                html_content=html_content, browser=browser
+                html_content=document, browser=browser
             )
             attachment_pdfs: list[bytes] = []
 
+            async def add_attachment(attachment_pdf: bytes):
+                # We create a separate header page for each attachment so that we do not have
+                # to, e.g., add a header to an attachment that is already a pdf.
+                attachment_cover_page_template = self.env.get_template(
+                    "attachment-cover.html"
+                )
+                attachment_cover_page_html = attachment_cover_page_template.render(
+                    {"attachmentNumber": len(attachment_pdfs) + 1}
+                )
+                attachment_cover_page_pdf = await self._html_to_pdf(
+                    html_content=attachment_cover_page_html, browser=browser
+                )
+                attachment_pdfs.append(attachment_cover_page_pdf)
+                attachment_pdfs.append(attachment_pdf)
+
+            # We first render all of the associated documents as attachments
+            for associated_document in associated_documents:
+                attachment_pdf = await self._html_to_pdf(
+                    html_content=associated_document, browser=browser
+                )
+                await add_attachment(attachment_pdf)
+
+            # We then render all user-defined attachments
             for index, data_url in enumerate(attachments):
                 file_type, payload_bytes = self._decode_data_url(data_url)
                 if not file_type or payload_bytes is None:
@@ -232,18 +256,6 @@ class v1_do_artifacts_connector:
                         "Could not parse data URL for attachment %s", index + 1
                     )
                     continue
-
-                # We create a separate header page for each attachment so that we do not have
-                # to, e.g., add a header to an attachment that is already a pdf.
-                attachment_cover_page_template = self.env.get_template(
-                    "attachment-cover.html"
-                )
-                attachment_cover_page_html = attachment_cover_page_template.render(
-                    {"attachmentNumber": index + 1}
-                )
-                attachment_cover_page_pdf = await self._html_to_pdf(
-                    html_content=attachment_cover_page_html, browser=browser
-                )
 
                 # Now we get the attachment data itself as a pdf.
                 attachment_pdf: Optional[bytes] = None
@@ -266,7 +278,7 @@ class v1_do_artifacts_connector:
                     )
 
                 if attachment_pdf:
-                    attachment_pdfs += [attachment_cover_page_pdf, attachment_pdf]
+                    await add_attachment(attachment_pdf)
 
             all_pdfs = [form_data_pdf] + attachment_pdfs
             merged_pdf_bytes = self._merge_pdfs(all_pdfs)
@@ -276,7 +288,7 @@ class v1_do_artifacts_connector:
     async def _html_to_pdf(self, html_content: str, browser: Browser) -> bytes:
         page = await browser.new_page()
         await page.set_content(html_content)
-        pdf_buffer = await page.pdf()
+        pdf_buffer = await page.pdf(print_background=True)
         return pdf_buffer
 
     def _decode_data_url(self, data_url: str) -> tuple[Optional[str], Optional[bytes]]:
@@ -316,3 +328,71 @@ class v1_do_artifacts_connector:
         writer.write(output)
         output.seek(0)
         return output.getvalue()
+
+    def _format_template_data(self, template_name, template_data, task_data):
+        if not (template_data):
+            logger.info("Template data is not provided, using task_data instead")
+            template_data = task_data
+
+        print("\n\nRAW TEMPLATE DATA", template_data)
+
+        attachments = template_data.get("attachments", [])
+
+        # This is a total hack. The issue is that the user can enter any string,
+        # so we are trying to format an arbitrary string.
+        template_data["exclusions"] = template_data["exclusionsText"].split("\n")
+        template_data["lupDecisions"] = template_data["lupDecisions"].split("\n")
+
+        # Parse out data from the approvers array
+        template_data["responsibleOfficial"] = self._get_responsible_official_string(
+            template_data["approvers"]
+        )
+        template_data["approvalDate"] = self._get_last_approval_date(
+            template_data["approvers"]
+        )
+        # This assumes associated documents will be attachments
+        template_data["numberOfAttachments"] = len(attachments) + len(
+            ASSOCIATED_DOCUMENTS_MAP[template_name]
+        )
+
+        # Format the ID Team Checklist data
+        all_id_team_checklist_resources = template_data["allIdTeamChecklistResources"]
+        all_id_team_checklist_resources_with_survey: dict[str, Any] = template_data[
+            "idTeamChecklist"
+        ]
+
+        idTeamChecklist = []
+        for resource in all_id_team_checklist_resources:
+            newIdTeamItem: dict[str, Any] = {}
+            newIdTeamItem["resource"] = resource.replace(
+                "_", " "
+            )  # Warning: this is fragile. It relies on the name of the resource being the same as the name of the variable.
+            if resource in all_id_team_checklist_resources_with_survey:
+                # This resource had an associated survey conducted
+                surveyData = all_id_team_checklist_resources_with_survey[resource]
+                newIdTeamItem["selectedForReview"] = "Yes"
+                newIdTeamItem["impact"] = surveyData["impact"]
+                newIdTeamItem["rationale"] = surveyData["rationale"]
+                newIdTeamItem["specialistName"] = surveyData["specialist"]
+                newIdTeamItem["date"] = surveyData["date"]
+            else:
+                newIdTeamItem["selectedForReview"] = "No"
+            idTeamChecklist.append(newIdTeamItem)
+
+        def checklist_sort(item: dict[str, Any]):
+            # Sort so that those with impact are listed first
+            secondary_sort = item["resource"]
+            if item["selectedForReview"] == "Yes" and item["impact"] == "Yes":
+                primary_sort = 1
+            elif item.get("impact", "No") == "Yes":
+                primary_sort = 2
+            elif item["selectedForReview"] == "Yes":
+                primary_sort = 3
+            else:
+                primary_sort = 4
+            return (primary_sort, secondary_sort)
+
+        idTeamChecklist = sorted(idTeamChecklist, key=checklist_sort)
+
+        template_data["idTeamChecklistData"] = idTeamChecklist
+        return template_data
