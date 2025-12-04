@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>{{projectTitle}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    {% include "base-styles.html" %}
+    <style>
+      table {
+        font-size: 11px;
+      }
+      td, th {
+        border: 1px solid black;
+        padding: 8px;
+      }
+      th {
+        background-color: #bbbbbb !important;
+      }
+      .checklist-div {
+        text-align: center;
+        justify-items: center;
+      }
+      .table-legend {
+        font-size: 12px;
+      }
+      .rationale-column {
+        text-align: left !important;
+        min-width: 200px;
+      }
+      .date-column {
+        min-width: 90px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="checklist-div">
+      <main role="main" id="main-content"></main>
+        <h4>INTERDISCIPLINARY TEAM CHECKLIST</h4>
+        <div class="table-legend">
+          <p>Yes/No = Will the Proposed Action have an impact on the following resources or uses (yes or no; if yes, how)?</p>
+        </div>
+        <table>
+          <tr>
+            <th>Resource/Use</th>
+            <th>Selected for Review</th>
+            <th>Yes/No*</th>
+            <th>Rationale for Determination</th>
+            <th>Name of Assigned Specialist</th>
+            <th>Date</th>
+          </tr>
+          {% for data in idTeamChecklistData %}
+          <tr>
+            <td>{{ data.resource }}</td>
+            <td>{{ data.selectedForReview }}</td>
+            <td>{{ data.impact | default('') }}</td>
+            <td class="rationale-column">{{ data.rationale | default('') }}</td>
+            <td>{{ data.specialistName | default('') }}</td>
+            <td class="date-column">{{ data.date | default('') }}</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </main>
+    </div>
+  </body>
+</html>

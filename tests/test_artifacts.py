@@ -27,6 +27,8 @@ class TestArtifactsService:
                     {"name": "Approver 1", "date": "2023-09-29"},
                     {"name": "Approver 2", "date": "2023-09-29"},
                 ],
+                "allIdTeamChecklistResources": [],
+                "idTeamChecklist": {},
             },
             "generate_links": False,
             "callback": "id",
@@ -73,6 +75,8 @@ class TestArtifactsService:
                     {"name": "Approver 1", "date": "2023-09-29"},
                     {"name": "Approver 2", "date": "2023-09-29"},
                 ],
+                "allIdTeamChecklistResources": [],
+                "idTeamChecklist": {},
             },
             "generate_links": True,
             "storage": "s3",
@@ -160,6 +164,8 @@ class TestBLMSpecificFlows:
                 "officeName": "officeName_val",
                 "mailingAddress": "mailingAddress_val",
                 "telephoneNumber": "telephoneNumber_val",
+                "allIdTeamChecklistResources": [],
+                "idTeamChecklist": {},
             },
             "generate_links": False,
             "callback": "id",
@@ -178,7 +184,13 @@ class TestBLMSpecificFlows:
         html_content = mock_artifacts_generate_pdf_with_attachments.call_args[0][0]
 
         for item in test_data["data"]:
-            if item not in ["lupDecisions", "approvers", "exclusionsText"]:
+            if item not in [
+                "lupDecisions",
+                "approvers",
+                "exclusionsText",
+                "allIdTeamChecklistResources",
+                "idTeamChecklist",
+            ]:
                 assert f"{item}_val" in html_content
         assert "Approver 1, Approver 2" in html_content
         assert "2023-09-29" in html_content
