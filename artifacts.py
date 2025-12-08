@@ -187,12 +187,6 @@ class v1_do_artifacts_connector:
         template = self.env.get_template(template_name)
         return template.render(template_data)
 
-    def _get_responsible_official_string(self, approvers: list[dict[str, Any]]):
-        # This is fragile. We get the last two approvers from the approvers list
-        # and render them like {Name 1}, {Name 2}
-        approvers_cleaned = [a["name"] for a in approvers[-2:] if a["name"].strip()]
-        return ", ".join(approvers_cleaned)
-
     def _get_last_approval_date(self, approvers: list[dict[str, Any]]):
         return approvers[-1]["date"]
 
@@ -343,9 +337,7 @@ class v1_do_artifacts_connector:
         template_data["lupDecisions"] = template_data["lupDecisions"].split("\n")
 
         # Parse out data from the approvers array
-        template_data["responsibleOfficial"] = self._get_responsible_official_string(
-            template_data["approvers"]
-        )
+        template_data["responsibleOfficial"] = template_data["approvers"][-1]["name"]
         template_data["approvalDate"] = self._get_last_approval_date(
             template_data["approvers"]
         )
