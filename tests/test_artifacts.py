@@ -192,5 +192,6 @@ class TestBLMSpecificFlows:
                 "idTeamChecklist",
             ]:
                 assert f"{item}_val" in html_content
-        assert "Approver 1, Approver 2" in html_content
+        assert "Approver 2" in html_content
+        assert "Approver 1" not in html_content
         assert "2023-09-29" in html_content
