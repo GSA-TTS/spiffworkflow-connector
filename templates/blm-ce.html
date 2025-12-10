@@ -76,24 +76,13 @@
             {% for exclusion in exclusions %}
             <p style="margin-top: 0.5em">{{ exclusion }}</p>
             {% endfor %}
-            <p>
-              We recommend that you approach adoption of a CX determination
-              similarly to adopting another agency's EA or EIS and coordinated
-              on development of a single document that addresses both agencies'
-              requirements and is signed by both agencies. However, if this is
-              not feasible, you may adopt a CX determination through additional
-              documentation that shows determination of the proposed action as
-              substantially the same as the action covered by the original CX
-              and that no DOI extraordinary circumstances are present (40 CFR
-              1506.3(d)(1)).
-            </p>
           </li>
           <li>
             <h3>Extraordinary Circumstances Review:</h3>
             <p>The proposed action will not:</p>
             <ol>
               <li>
-                <h4>Have significant impacts on public health.</h4>
+                <h4>Have significant impacts on public health or safety.</h4>
                 <p><strong>Rationale:</strong> {{publicHealthImpacts}}</p>
               </li>
               <li>
@@ -102,8 +91,7 @@
                   geographic characteristics as historic or cultural resources;
                   park, recreation or refuge lands; wilderness areas; wild or
                   scenic rivers; national natural landmarks; sole or principal
-                  drinking water aquifers; prime farmlands; wetlands (Executive
-                  Order 11990); floodplains (Executive Order 11988); national
+                  drinking water aquifers; prime farmlands; wetlands; floodplains; national
                   monuments; migratory birds; and other ecologically significant
                   or critical areas.
                 </h4>
@@ -111,9 +99,8 @@
               </li>
               <li>
                 <h4>
-                  Have highly controversial environmental effects or involve
-                  unresolved conflicts concerning alternative uses of available
-                  resources [NEPA section 102 (2) (E)].
+                  Have highly uncertain and potentially significant environmental effects or involve
+                  unique or unknown environmental risks.
                 </h4>
                 <p><strong>Rationale</strong> {{controversialEffects}}</p>
               </li>
@@ -127,8 +114,7 @@
               </li>
               <li>
                 <h4>
-                  Have a direct relationship to other actions with individually
-                  insignificant but cumulatively significant environmental
+                  Have a direct relationship to other actions that implicate potentially significant environmental
                   effects.
                 </h4>
                 <p><strong>Rationale:</strong> {{cumulativeImpacts}}</p>
@@ -152,20 +138,20 @@
               </li>
               <li>
                 <h4>
-                  Limit access to and ceremonial use of Indian sacred sites on
+                  Significantly limit access to and ceremonial use of Indian sacred sites on
                   Federal lands by Indian religious practitioners or
                   significantly adversely affect the physical integrity of such
-                  sacred sites (Executive Order 13007).
+                  sacred sites.
                 </h4>
                 <p><strong>Rationale:</strong> {{limitAccessToSacredSites}}</p>
               </li>
               <li>
                 <h4>
-                  Contribute to the introduction, continued existence, or spread
+                  Contribute to potentially significant effects resulting from the introduction,
+                  continued existence, or spread
                   of noxious weeds or non-native invasive species known to occur
-                  in the area or actions that may promote the introduction,
-                  growth, or expansion of the range of such species (Federal
-                  Noxious Weed Control Act and Executive Order 13112).
+                  in the area or from other actions that promote the introduction,
+                  growth, or expansion of the range of such species (Federal Noxious Weed Control Act).
                 </h4>
                 <p><strong>Rationale:</strong> {{promoteNoxiousWeeds}}</p>
               </li>
