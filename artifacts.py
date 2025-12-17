@@ -24,7 +24,7 @@ from s3utils import (
 logger = logging.getLogger(__name__)
 
 # For a given key, specify any attachment templates associated with the main template
-ASSOCIATED_DOCUMENTS_MAP = {"blm-ce.html": ["blm-id-checklist.html"]}
+ASSOCIATED_DOCUMENTS_MAP = {"blm-ce.html": []}
 
 
 def command_handler(error_context: str):
