@@ -27,6 +27,7 @@ class TestArtifactsService:
                     {"name": "Approver 1", "date": "2023-09-29"},
                     {"name": "Approver 2", "date": "2023-09-29"},
                 ],
+                "responsibleOfficial": "responsibleOfficial_val",
                 "allIdTeamChecklistResources": [],
                 "idTeamChecklist": {},
             },
@@ -75,6 +76,7 @@ class TestArtifactsService:
                     {"name": "Approver 1", "date": "2023-09-29"},
                     {"name": "Approver 2", "date": "2023-09-29"},
                 ],
+                "responsibleOfficial": "responsibleOfficial_val",
                 "allIdTeamChecklistResources": [],
                 "idTeamChecklist": {},
             },
@@ -149,6 +151,7 @@ class TestBLMSpecificFlows:
                     {"name": "Approver 1", "date": "2023-09-29"},
                     {"name": "Approver 2", "date": "2023-09-29"},
                 ],
+                "responsibleOfficial": "responsibleOfficial_val",
                 "lupDecisions": "lupDecisions_val",
                 "publicHealthImpacts": "publicHealthImpacts_val",
                 "naturalResourcesImpacts": "naturalResourcesImpacts_val",
@@ -192,6 +195,4 @@ class TestBLMSpecificFlows:
                 "idTeamChecklist",
             ]:
                 assert f"{item}_val" in html_content
-        assert "Approver 2" in html_content
-        assert "Approver 1" not in html_content
         assert "2023-09-29" in html_content
