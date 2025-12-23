@@ -336,8 +336,7 @@ class v1_do_artifacts_connector:
         template_data["exclusions"] = template_data["exclusionsText"].split("\n")
         template_data["lupDecisions"] = template_data["lupDecisions"].split("\n")
 
-        # Parse out data from the approvers array
-        template_data["responsibleOfficial"] = template_data["approvers"][-1]["name"]
+        template_data["responsibleOfficial"] = template_data["responsibleOfficial"]
         template_data["approvalDate"] = self._get_last_approval_date(
             template_data["approvers"]
         )
