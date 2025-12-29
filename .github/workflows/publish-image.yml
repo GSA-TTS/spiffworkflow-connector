@@ -27,7 +27,7 @@ jobs:
         with:
           file: ./Dockerfile
           push: true
-          tags: ghcr.io/gsa-tts/spiffworkflow-connector:latest
+          tags: |
+            ghcr.io/gsa-tts/spiffworkflow-connector:latest
+            ghcr.io/gsa-tts/spiffworkflow-connector:${{ github.sha }}
           platforms: linux/amd64, linux/arm64
-
-
