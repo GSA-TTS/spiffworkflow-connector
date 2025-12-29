@@ -22,12 +22,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Set release date
+        id: release_date
+        run: echo "date=$(date +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
+
       - name: Publish Spiffworkflow-Connector
         uses: docker/build-push-action@v6
         with:
           file: ./Dockerfile
           push: true
-          tags: ghcr.io/gsa-tts/spiffworkflow-connector:latest
+          tags: |
+            ghcr.io/gsa-tts/spiffworkflow-connector:latest
+            ghcr.io/gsa-tts/spiffworkflow-connector:${{ steps.release_date.outputs.date }}
           platforms: linux/amd64, linux/arm64
-
-
