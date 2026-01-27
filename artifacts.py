@@ -337,9 +337,11 @@ class v1_do_artifacts_connector:
         template_data["lupDecisions"] = template_data["lupDecisions"].split("\n")
 
         template_data["responsibleOfficial"] = template_data["responsibleOfficial"]
-        template_data["approvalDate"] = self._get_last_approval_date(
-            template_data["approvers"]
-        )
+        approvers = template_data.get("approvers", [])
+        if approvers:
+            template_data["approvalDate"] = self._get_last_approval_date(approvers)
+        else:
+            template_data["approvalDate"] = None
         # This assumes associated documents will be attachments
         template_data["numberOfAttachments"] = len(attachments) + len(
             ASSOCIATED_DOCUMENTS_MAP.get(template_name, [])
@@ -347,10 +349,7 @@ class v1_do_artifacts_connector:
 
         # Format the ID Team Checklist data
         all_id_team_checklist_resources = template_data["allIdTeamChecklistResources"]
-        all_id_team_checklist_resources_with_survey: dict[str, Any] = template_data[
-            "idTeamChecklist"
-        ]
-
+        all_id_team_checklist_resources_with_survey: dict[str, Any] = template_data.get("idTeamChecklist", {})
         idTeamChecklist = []
         for resource in all_id_team_checklist_resources:
             newIdTeamItem: dict[str, Any] = {}

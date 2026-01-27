@@ -196,3 +196,76 @@ class TestBLMSpecificFlows:
             ]:
                 assert f"{item}_val" in html_content
         assert "2023-09-29" in html_content
+
+    # for testing our blm generic flow 
+    @patch("artifacts.create_s3_client")
+    @patch("artifacts.get_bucket_for_storage")
+    def test_blm_generic_artifact_payload(
+        self,
+        mock_get_bucket,
+        mock_create_s3_client,
+        client,
+        mock_artifacts_generate_pdf_with_attachments,
+    ):
+        test_data = {
+            "id": "test-artifact-123_generic",
+            "template": "blm-ce.html",
+            "data": {
+                "projectTitle": "projectTitle_val",
+                "categoricalExclusionID": "categoricalExclusionID_val",
+                "fieldofficeName": "fieldofficeName_val",
+                "streetAddress": "streetAddress_val",
+                "city": "city_val",
+                "zipCode": "zipCode_val",
+                "locationOfProposedAction": "locationOfProposedAction_val",
+                "leaseSerialCaseFileNumber": "leaseSerialCaseFileNumber_val",
+                "applicant": "applicant_val",
+                "projectDescription": "projectDescription_val",
+                "landUsePlanName": "landUsePlanName_val",
+                "dateApproved": "dateApproved_val",
+                "exclusionsText": "Fake exclusions",
+                "lupDecisions": "Fake LUP decisions",
+                "responsibleOfficial": "responsibleOfficial_val",
+                "lupDecisions": "lupDecisions_val",
+                "publicHealthImpacts": "publicHealthImpacts_val",
+                "naturalResourcesImpacts": "naturalResourcesImpacts_val",
+                "controversialEffects": "controversialEffects_val",
+                "precedentForFutureAction": "precedentForFutureAction_val",
+                "cumulativeImpacts": "cumulativeImpacts_val",
+                "endangeredSpeciesImpacts": "endangeredSpeciesImpacts_val",
+                "limitAccessToSacredSites": "limitAccessToSacredSites_val",
+                "promoteNoxiousWeeds": "promoteNoxiousWeeds_val",
+                "categoricalExclusionJustification": "categoricalExclusionJustification_val",
+                "contactPerson": "contactPerson_val",
+                "contactTitle": "contactTitle_val",
+                "officeName": "officeName_val",
+                "mailingAddress": "mailingAddress_val",
+                "telephoneNumber": "telephoneNumber_val",
+                "allIdTeamChecklistResources": [],
+                "idTeamChecklist": {},
+            },
+            "generate_links": False,
+            "callback": "id",
+            "storage": "s3",
+        }
+
+        mock_artifacts_generate_pdf_with_attachments.return_value = b"fake_pdf_content"
+        result = client.simulate_post(f"{API_ENDPOINT}GenerateArtifact", json=test_data)
+
+        # assert command returns valid status & response
+        json_response = json.loads(result.text)
+        assert json_response["command_response"]["http_status"] == "200"
+        assert json_response["command_response"]["body"]["private_link"]
+
+        # assert contents of pdf indirectly via call_args
+        html_content = mock_artifacts_generate_pdf_with_attachments.call_args[0][0]
+
+        for item in test_data["data"]:
+            if item not in [
+                "lupDecisions",
+                "approvers",
+                "exclusionsText",
+                "allIdTeamChecklistResources",
+                "idTeamChecklist",
+            ]:
+                assert f"{item}_val" in html_content
