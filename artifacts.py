@@ -348,8 +348,12 @@ class v1_do_artifacts_connector:
         )
 
         # Format the ID Team Checklist data
-        all_id_team_checklist_resources = template_data["allIdTeamChecklistResources"]
-        all_id_team_checklist_resources_with_survey: dict[str, Any] = template_data.get("idTeamChecklist", {})
+        all_id_team_checklist_resources = template_data.get(
+            "allIdTeamChecklistResources", {}
+        )
+        all_id_team_checklist_resources_with_survey: dict[str, Any] = template_data.get(
+            "idTeamChecklist", {}
+        )
         idTeamChecklist = []
         for resource in all_id_team_checklist_resources:
             newIdTeamItem: dict[str, Any] = {}
