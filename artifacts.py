@@ -3,6 +3,7 @@ import json
 import io
 import logging
 from typing import Any, Optional
+from urllib.parse import unquote, urlparse
 from playwright.async_api import Browser
 import html
 
@@ -25,6 +26,29 @@ logger = logging.getLogger(__name__)
 
 # For a given key, specify any attachment templates associated with the main template
 ASSOCIATED_DOCUMENTS_MAP = {"blm-ce.html": []}
+
+
+def proxy_from_env():
+    raw = os.getenv("HTTPS_PROXY") or os.getenv("https_proxy")
+    if not raw:
+        return None
+    u = urlparse(raw)
+    server = f"{u.scheme}://{u.hostname}"
+    if u.port:
+        server += f":{u.port}"
+
+    proxy = {
+        "server": server,
+        "bypass": "apps.internal,localhost,127.0.0.1",
+    }
+
+    if u.username:
+        proxy["username"] = unquote(u.username)
+
+    if u.password:
+        proxy["password"] = unquote(u.password)
+
+    return proxy
 
 
 def command_handler(error_context: str):
@@ -211,7 +235,9 @@ class v1_do_artifacts_connector:
         """
         async with async_playwright() as p:
             browser = (
-                await p.chromium.launch()
+                await p.chromium.launch(
+                    proxy=proxy_from_env()
+                )
             )  # Note: probably better to cache this at the class level?
 
             # We will merge the form-data pdf with all attachments (which we render as separate pdfs).
