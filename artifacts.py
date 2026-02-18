@@ -30,7 +30,7 @@ ASSOCIATED_DOCUMENTS_MAP = {"blm-ce.html": []}
 
 def proxy_from_env():
     raw = os.getenv("HTTPS_PROXY") or os.getenv("https_proxy")
-    print('proxy url', raw)
+    logger.info('proxy url', raw)
     if not raw:
         return None
     u = urlparse(raw)
@@ -48,7 +48,7 @@ def proxy_from_env():
 
     if u.password:
         proxy["password"] = unquote(u.password)
-    print('proxy info for playwright', proxy)
+    logger.info('proxy info for playwright', proxy)
     return proxy
 
 
@@ -310,17 +310,17 @@ class v1_do_artifacts_connector:
     async def _html_to_pdf(self, html_content: str, browser: Browser) -> bytes:
         page = await browser.new_page()
         # Temp debug logs to see why PDF resources are not being loaded
-        page.on("request", lambda req: print(
+        page.on("request", lambda req: logger.info(
             'request',
             req.url,
             req.failure
         ))
-        page.on("requestresponse", lambda req: print(
+        page.on("requestresponse", lambda req: logger.info(
             'requestresponse',
             req.url,
             req.failure
         ))
-        page.on("requestfailed", lambda req: print(
+        page.on("requestfailed", lambda req: logger.info(
             'requestfailed',
             req.url,
             req.failure
