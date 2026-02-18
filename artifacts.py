@@ -237,7 +237,8 @@ class v1_do_artifacts_connector:
         async with async_playwright() as p:
             browser = (
                 await p.chromium.launch(
-                    proxy=proxy_from_env()
+                    proxy=proxy_from_env(),
+                    args=["--ignore-certificate-errors"]
                 )
             )  # Note: probably better to cache this at the class level?
 
