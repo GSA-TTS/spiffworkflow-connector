@@ -237,8 +237,7 @@ class v1_do_artifacts_connector:
         async with async_playwright() as p:
             browser = (
                 await p.chromium.launch(
-                    proxy=proxy_from_env(),
-                    ignoreHTTPSErrors=True
+                    proxy=proxy_from_env()
                 )
             )  # Note: probably better to cache this at the class level?
 
@@ -309,13 +308,21 @@ class v1_do_artifacts_connector:
             return merged_pdf_bytes
 
     async def _html_to_pdf(self, html_content: str, browser: Browser) -> bytes:
-        page = await browser.new_page()
+        context = await browser.new_context(ignore_https_errors=True)
+        page = await context.new_page()
+
         # Temp debug logs to see why PDF resources are not being loaded
-        page.on("requestfailed", lambda req: logger.info(
-            f'requestfailed {req.url} {req.failure}'
-        ))
-        await page.set_content(html_content)
+        page.on(
+            "requestfailed",
+            lambda req: logger.info(
+                f"requestfailed {req.url} {req.failure}"
+            ),
+        )
+
+        await page.set_content(html_content, wait_until="networkidle")
         pdf_buffer = await page.pdf(print_background=True)
+
+        await context.close()
         return pdf_buffer
 
     def _decode_data_url(self, data_url: str) -> tuple[Optional[str], Optional[bytes]]:
