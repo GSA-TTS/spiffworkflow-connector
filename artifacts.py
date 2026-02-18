@@ -308,6 +308,22 @@ class v1_do_artifacts_connector:
 
     async def _html_to_pdf(self, html_content: str, browser: Browser) -> bytes:
         page = await browser.new_page()
+        # Temp debug logs to see why PDF resources are not being loaded
+        page.on("request", lambda req: print(
+            'request',
+            req.url,
+            req.failure
+        ))
+        page.on("requestresponse", lambda req: print(
+            'requestresponse',
+            req.url,
+            req.failure
+        ))
+        page.on("requestfailed", lambda req: print(
+            'requestfailed',
+            req.url,
+            req.failure
+        ))
         await page.set_content(html_content)
         pdf_buffer = await page.pdf(print_background=True)
         return pdf_buffer
