@@ -1,21 +1,15 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <title>{{projectTitle}}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    {% include "base-styles.html" %}
+    {% include "base-styles.html" %} {% include "tailwind.html" %}
   </head>
   <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <div class="container mx-auto p-5">
       <header role="banner" class="flex">
-        <div class="w-15 flex-none">
-          <img
-            src="https://www.blm.gov/themes/custom/blm_d9_22/logo.svg"
-            alt="Bureau of Land Management Logo"
-          />
-        </div>
+        <div class="w-15 flex-none">{% include "blm_logo.svg" %}</div>
         <div class="flex-1 ml-3">
           <p class="agency__name uppercase">
             United States Department of the Interior
@@ -91,16 +85,17 @@
                   geographic characteristics as historic or cultural resources;
                   park, recreation or refuge lands; wilderness areas; wild or
                   scenic rivers; national natural landmarks; sole or principal
-                  drinking water aquifers; prime farmlands; wetlands; floodplains; national
-                  monuments; migratory birds; and other ecologically significant
-                  or critical areas.
+                  drinking water aquifers; prime farmlands; wetlands;
+                  floodplains; national monuments; migratory birds; and other
+                  ecologically significant or critical areas.
                 </h4>
                 <p><strong>Rationale:</strong> {{naturalResourcesImpacts}}</p>
               </li>
               <li>
                 <h4>
-                  Have highly uncertain and potentially significant environmental effects or involve
-                  unique or unknown environmental risks.
+                  Have highly uncertain and potentially significant
+                  environmental effects or involve unique or unknown
+                  environmental risks.
                 </h4>
                 <p><strong>Rationale</strong> {{controversialEffects}}</p>
               </li>
@@ -114,15 +109,15 @@
               </li>
               <li>
                 <h4>
-                  Have a direct relationship to other actions that implicate potentially significant environmental
-                  effects.
+                  Have a direct relationship to other actions that implicate
+                  potentially significant environmental effects.
                 </h4>
                 <p><strong>Rationale:</strong> {{cumulativeImpacts}}</p>
               </li>
               <li>
                 <h4>
-                  Have significant impacts on properties listed, or eligible
-                  for listing, on the National Register of Historic Places as
+                  Have significant impacts on properties listed, or eligible for
+                  listing, on the National Register of Historic Places as
                   determined by the bureau.
                 </h4>
                 <p><strong>Rationale:</strong> {{historicProperties}}</p>
@@ -138,20 +133,21 @@
               </li>
               <li>
                 <h4>
-                  Significantly limit access to and ceremonial use of Indian sacred sites on
-                  Federal lands by Indian religious practitioners or
-                  significantly adversely affect the physical integrity of such
-                  sacred sites.
+                  Significantly limit access to and ceremonial use of Indian
+                  sacred sites on Federal lands by Indian religious
+                  practitioners or significantly adversely affect the physical
+                  integrity of such sacred sites.
                 </h4>
                 <p><strong>Rationale:</strong> {{limitAccessToSacredSites}}</p>
               </li>
               <li>
                 <h4>
-                  Contribute to potentially significant effects resulting from the introduction,
-                  continued existence, or spread
-                  of noxious weeds or non-native invasive species known to occur
-                  in the area or from other actions that promote the introduction,
-                  growth, or expansion of the range of such species (Federal Noxious Weed Control Act).
+                  Contribute to potentially significant effects resulting from
+                  the introduction, continued existence, or spread of noxious
+                  weeds or non-native invasive species known to occur in the
+                  area or from other actions that promote the introduction,
+                  growth, or expansion of the range of such species (Federal
+                  Noxious Weed Control Act).
                 </h4>
                 <p><strong>Rationale:</strong> {{promoteNoxiousWeeds}}</p>
               </li>
