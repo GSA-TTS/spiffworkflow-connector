@@ -34,7 +34,7 @@ def proxy_from_env():
     if not raw:
         return None
     u = urlparse(raw)
-    server = f"http://{u.hostname}"
+    server = f"{u.scheme}://{u.hostname}"
     if u.port:
         server += f":{u.port}"
 
