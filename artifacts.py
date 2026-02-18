@@ -30,6 +30,7 @@ ASSOCIATED_DOCUMENTS_MAP = {"blm-ce.html": []}
 
 def proxy_from_env():
     raw = os.getenv("HTTPS_PROXY") or os.getenv("https_proxy")
+    print('proxy url', raw)
     if not raw:
         return None
     u = urlparse(raw)
@@ -47,7 +48,7 @@ def proxy_from_env():
 
     if u.password:
         proxy["password"] = unquote(u.password)
-
+    print('proxy info for playwright', proxy)
     return proxy
 
 
