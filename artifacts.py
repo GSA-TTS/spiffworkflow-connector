@@ -30,7 +30,7 @@ ASSOCIATED_DOCUMENTS_MAP = {"blm-ce.html": []}
 
 def proxy_from_env():
     raw = os.getenv("HTTPS_PROXY") or os.getenv("https_proxy")
-    logger.info('proxy url', raw)
+    logger.info(f'proxy url {raw}')
     if not raw:
         return None
     u = urlparse(raw)
@@ -48,7 +48,7 @@ def proxy_from_env():
 
     if u.password:
         proxy["password"] = unquote(u.password)
-    logger.info('proxy info for playwright', proxy)
+    logger.info(r'proxy info for playwright {proxy}')
     return proxy
 
 
@@ -237,7 +237,8 @@ class v1_do_artifacts_connector:
         async with async_playwright() as p:
             browser = (
                 await p.chromium.launch(
-                    proxy=proxy_from_env()
+                    proxy=proxy_from_env(),
+                    args=[ "--ca-certificate-file=/etc/ssl/certs/cf-system-certificates.pem"],
                 )
             )  # Note: probably better to cache this at the class level?
 
@@ -310,20 +311,8 @@ class v1_do_artifacts_connector:
     async def _html_to_pdf(self, html_content: str, browser: Browser) -> bytes:
         page = await browser.new_page()
         # Temp debug logs to see why PDF resources are not being loaded
-        page.on("request", lambda req: logger.info(
-            'request',
-            req.url,
-            req.failure
-        ))
-        page.on("requestresponse", lambda req: logger.info(
-            'requestresponse',
-            req.url,
-            req.failure
-        ))
         page.on("requestfailed", lambda req: logger.info(
-            'requestfailed',
-            req.url,
-            req.failure
+            f'requestfailed {req.url} {req.failure}'
         ))
         await page.set_content(html_content)
         pdf_buffer = await page.pdf(print_background=True)
