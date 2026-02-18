@@ -238,6 +238,7 @@ class v1_do_artifacts_connector:
             browser = (
                 await p.chromium.launch(
                     proxy=proxy_from_env(),
+                    ignoreHTTPSErrors=True
                 )
             )  # Note: probably better to cache this at the class level?
 
