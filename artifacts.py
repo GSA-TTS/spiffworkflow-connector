@@ -34,7 +34,7 @@ def proxy_from_env():
     if not raw:
         return None
     u = urlparse(raw)
-    server = f"{u.scheme}://{u.hostname}"
+    server = f"http://{u.hostname}"
     if u.port:
         server += f":{u.port}"
 
@@ -48,7 +48,7 @@ def proxy_from_env():
 
     if u.password:
         proxy["password"] = unquote(u.password)
-    logger.info(r'proxy info for playwright {proxy}')
+    logger.info(f'proxy info for playwright {proxy}')
     return proxy
 
 
