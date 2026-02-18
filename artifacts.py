@@ -238,7 +238,6 @@ class v1_do_artifacts_connector:
             browser = (
                 await p.chromium.launch(
                     proxy=proxy_from_env(),
-                    args=[ "--ca-certificate-file=/etc/ssl/certs/cf-system-certificates.pem"],
                 )
             )  # Note: probably better to cache this at the class level?
 
