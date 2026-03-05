@@ -12,22 +12,21 @@ RUN apt-get update && apt-get install -y wget curl && \
 ENV PATH="/root/.cargo/bin:$PATH"
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
 
-# Copy dependency files
+# Copy dependency files (needed by playwright install for the uv project)
 COPY pyproject.toml uv.lock ./
 
-# Install all dependencies including dev dependencies
-RUN uv sync --frozen
-
-# Install Playwright browser
-RUN uv run playwright install chromium --with-deps --only-shell
-
-COPY *.py .
-COPY ./bin ./bin/
-COPY ./templates ./templates/
+# Install Playwright browser (system-level, survives .venv remount)
+RUN uv sync --frozen && \
+  uv run playwright install chromium --with-deps --only-shell && \
+  rm -rf .venv
 
 # Install minio client
 RUN wget https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc && \
   chmod +x /usr/local/bin/mc
+
+COPY *.py .
+COPY ./bin ./bin/
+COPY ./templates ./templates/
 
 ENTRYPOINT ["./bin/run_locally"]
 
