@@ -28,8 +28,6 @@ class TestArtifactsService:
                     {"name": "Approver 2", "date": "2023-09-29"},
                 ],
                 "responsibleOfficial": "responsibleOfficial_val",
-                "allIdTeamChecklistResources": [],
-                "idTeamChecklist": {},
             },
             "generate_links": False,
             "callback": "id",
@@ -77,8 +75,6 @@ class TestArtifactsService:
                     {"name": "Approver 2", "date": "2023-09-29"},
                 ],
                 "responsibleOfficial": "responsibleOfficial_val",
-                "allIdTeamChecklistResources": [],
-                "idTeamChecklist": {},
             },
             "generate_links": True,
             "storage": "s3",
@@ -167,8 +163,6 @@ class TestBLMSpecificFlows:
                 "officeName": "officeName_val",
                 "mailingAddress": "mailingAddress_val",
                 "telephoneNumber": "telephoneNumber_val",
-                "allIdTeamChecklistResources": [],
-                "idTeamChecklist": {},
             },
             "generate_links": False,
             "callback": "id",
@@ -191,8 +185,6 @@ class TestBLMSpecificFlows:
                 "lupDecisions",
                 "approvers",
                 "exclusionsText",
-                "allIdTeamChecklistResources",
-                "idTeamChecklist",
             ]:
                 assert f"{item}_val" in html_content
         assert "2023-09-29" in html_content
