@@ -770,7 +770,7 @@ requires-dist = [
     { name = "jinja2", specifier = ">=3.1.6" },
     { name = "minio", specifier = ">=7.2.18" },
     { name = "orjson", specifier = ">=3.11.3" },
-    { name = "playwright", specifier = ">=1.55.0" },
+    { name = "playwright", specifier = "==1.55.0" },
     { name = "pyinstrument", specifier = ">=5.1.1" },
     { name = "pypdf", specifier = ">=6.4.0" },
     { name = "watchfiles", specifier = ">=1.1.0" },
