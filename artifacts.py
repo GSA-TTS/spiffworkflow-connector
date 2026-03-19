@@ -344,3 +344,5 @@ class v1_do_artifacts_connector:
         template_data["numberOfAttachments"] = len(attachments) + len(
             ASSOCIATED_DOCUMENTS_MAP.get(template_name, [])
         )
+
+        return template_data
