@@ -12,11 +12,10 @@ RUN apt-get update && apt-get install -y curl && \
 ENV PATH="/root/.cargo/bin:$PATH"
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
 
-# Install Playwright browser (before deps so this layer is cached independently)
-RUN uvx playwright install chromium --with-deps --only-shell
-
 # Copy dependency files
 COPY pyproject.toml uv.lock ./
+
+RUN uv run playwright install chromium --with-deps --only-shell
 
 # Install dependencies using uv
 RUN uv sync --frozen --no-dev
