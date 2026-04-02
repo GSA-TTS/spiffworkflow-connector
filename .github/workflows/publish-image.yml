@@ -25,13 +25,18 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       
       - name: Determine image tag
         id: tag
+        env:
+          TAG_NAME: ${{ inputs.tag_name }}
+          GIT_REF: ${{ github.ref }}
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            if [ -n "${{ inputs.tag_name }}" ]; then
-              echo "image_tag=${{ inputs.tag_name }}" >> $GITHUB_OUTPUT
+            if [ -n "$TAG_NAME" ]; then
+              echo "image_tag=$TAG_NAME" >> $GITHUB_OUTPUT
             else
               echo "image_tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
             fi
@@ -39,7 +44,7 @@ jobs:
             echo "image_tag=latest" >> $GITHUB_OUTPUT
           fi
           
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          if [ "$GIT_REF" == "refs/heads/main" ]; then
             echo "is_main=true" >> $GITHUB_OUTPUT
           else
             echo "is_main=false" >> $GITHUB_OUTPUT
