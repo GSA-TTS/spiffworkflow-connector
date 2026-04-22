@@ -43,7 +43,7 @@ def command_handler(error_context: str):
             except Exception as e:
                 logger.error(f"{error_context}: {e}", exc_info=True)
                 response = "error"
-                status = "500"
+                status = 500
                 error = json.dumps({"error": str(e)})
 
             resp.media = {
@@ -99,7 +99,7 @@ class v1_do_artifacts_connector:
 
         # Generate response
         response = {"previewData": rendered_document_escaped_base64}
-        status = "200"
+        status = 200
         return response, status
 
     @command_handler("Error generating artifact")
@@ -154,7 +154,7 @@ class v1_do_artifacts_connector:
         response = self._generate_artifact_response(
             s3_client, bucket, artifact_id, generate_links
         )
-        status = "200"
+        status = 200
         return response, status
 
     @command_handler("Error generating link")
@@ -179,7 +179,7 @@ class v1_do_artifacts_connector:
         response = self._generate_artifact_response(
             s3_client, bucket, artifact_id, True
         )
-        status = "200"
+        status = 200
         return response, status
 
     def _render_template_html(self, template_name, template_data) -> str:
