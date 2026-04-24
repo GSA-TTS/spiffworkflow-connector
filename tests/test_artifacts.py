@@ -39,7 +39,7 @@ class TestArtifactsService:
 
         # assert command returns valid status & response
         json_response = json.loads(result.text)
-        assert json_response["command_response"]["http_status"] == "200"
+        assert json_response["command_response"]["http_status"] == 200
         assert json_response["command_response"]["body"]["private_link"]
 
         # assert contents of pdf indirectly via call_args
@@ -89,7 +89,7 @@ class TestArtifactsService:
         result = client.simulate_post(f"{API_ENDPOINT}GenerateArtifact", json=test_data)
 
         json_response = json.loads(result.text)
-        assert json_response["command_response"]["http_status"] == "200"
+        assert json_response["command_response"]["http_status"] == 200
         assert json_response["command_response"]["body"]["private_link"]
         assert json_response["command_response"]["body"]["presigned_link"]
 
@@ -174,7 +174,7 @@ class TestBLMSpecificFlows:
 
         # assert command returns valid status & response
         json_response = json.loads(result.text)
-        assert json_response["command_response"]["http_status"] == "200"
+        assert json_response["command_response"]["http_status"] == 200
         assert json_response["command_response"]["body"]["private_link"]
 
         # assert contents of pdf indirectly via call_args
