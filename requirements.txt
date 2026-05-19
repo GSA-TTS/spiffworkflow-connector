@@ -19,7 +19,7 @@ MarkupSafe==3.0.2
 minio==7.2.16
 orjson==3.11.6
 playwright==1.54.0
-pycparser==2.22
+pycparser==3.0
 pycryptodome==3.23.0
 pyee==13.0.0
 pyinstrument==5.0.2
