@@ -60,13 +60,9 @@ def command_handler(error_context: str):
     return decorator
 
 
-def check_required_parameters(
-    required_params: list[str], params: dict[str, Any]
-) -> None:
+def check_required_parameters(required_params: list[str], params: dict[str, Any]) -> None:
     if not all([params[key] for key in required_params]):
-        errorMessage = (
-            "Missing required parameters: " + ", ".join(required_params) + " required"
-        )
+        errorMessage = "Missing required parameters: " + ", ".join(required_params) + " required"
         raise ValueError(errorMessage)
 
 
@@ -85,9 +81,7 @@ class v1_do_artifacts_connector:
         template_data = params.get("data")
         task_data = params.get("spiff__task_data")
 
-        template_data = self._format_template_data(
-            template_name, template_data, task_data
-        )
+        template_data = self._format_template_data(template_name, template_data, task_data)
 
         rendered_document = self._render_template_html(template_name, template_data)
 
@@ -115,9 +109,7 @@ class v1_do_artifacts_connector:
         task_data = params.get("spiff__task_data")
         attachments = template_data.get("attachments", [])
 
-        template_data = self._format_template_data(
-            template_name, template_data, task_data
-        )
+        template_data = self._format_template_data(template_name, template_data, task_data)
 
         # Render the HTML for the main template
         rendered_document = self._render_template_html(template_name, template_data)
@@ -126,16 +118,10 @@ class v1_do_artifacts_connector:
         # These are attachments that are *always* added to the document, not attachments
         # a user has uploaded.
         associated_documents: list[str] = []
-        for associated_document_template in ASSOCIATED_DOCUMENTS_MAP.get(
-            template_name, []
-        ):
-            associated_documents.append(
-                self._render_template_html(associated_document_template, template_data)
-            )
+        for associated_document_template in ASSOCIATED_DOCUMENTS_MAP.get(template_name, []):
+            associated_documents.append(self._render_template_html(associated_document_template, template_data))
 
-        pdf_buffer = await self._generate_pdf_with_attachments(
-            rendered_document, associated_documents, attachments
-        )
+        pdf_buffer = await self._generate_pdf_with_attachments(rendered_document, associated_documents, attachments)
 
         # Prepare for S3 upload
         pdf_stream = io.BytesIO(pdf_buffer)
@@ -149,9 +135,7 @@ class v1_do_artifacts_connector:
         s3_client.put_object(Bucket=bucket, Key=artifact_id, Body=pdf_stream)
 
         # Generate response
-        response = self._generate_artifact_response(
-            s3_client, bucket, artifact_id, generate_links
-        )
+        response = self._generate_artifact_response(s3_client, bucket, artifact_id, generate_links)
         status = 200
         return response, status
 
@@ -174,9 +158,7 @@ class v1_do_artifacts_connector:
         s3_client.head_object(Bucket=bucket, Key=artifact_id)
 
         # Generate response
-        response = self._generate_artifact_response(
-            s3_client, bucket, artifact_id, True
-        )
+        response = self._generate_artifact_response(s3_client, bucket, artifact_id, True)
         status = 200
         return response, status
 
@@ -188,9 +170,7 @@ class v1_do_artifacts_connector:
     def _get_last_approval_date(self, approvers: list[dict[str, Any]]):
         return approvers[-1]["date"]
 
-    def _generate_artifact_response(
-        self, s3_client, bucket: str, key: str, include_presigned: bool
-    ) -> dict[str, str]:
+    def _generate_artifact_response(self, s3_client, bucket: str, key: str, include_presigned: bool) -> dict[str, str]:
         """Generate the response dictionary with appropriate links."""
         response = {"private_link": generate_private_link(bucket, key)}
 
@@ -208,22 +188,16 @@ class v1_do_artifacts_connector:
         use-uploaded documents to add as attachments.
         """
         async with async_playwright() as p:
-            browser = (
-                await p.chromium.launch()
-            )  # Note: probably better to cache this at the class level?
+            browser = await p.chromium.launch()  # Note: probably better to cache this at the class level?
 
             # We will merge the form-data pdf with all attachments (which we render as separate pdfs).
-            form_data_pdf: bytes = await self._html_to_pdf(
-                html_content=document, browser=browser
-            )
+            form_data_pdf: bytes = await self._html_to_pdf(html_content=document, browser=browser)
             attachment_pdfs: list[bytes] = []
 
             async def add_attachment(attachment_pdf: bytes):
                 # We create a separate header page for each attachment so that we do not have
                 # to, e.g., add a header to an attachment that is already a pdf.
-                attachment_cover_page_template = self.env.get_template(
-                    "attachment-cover.html"
-                )
+                attachment_cover_page_template = self.env.get_template("attachment-cover.html")
                 attachment_cover_page_html = attachment_cover_page_template.render(
                     {"attachmentNumber": len(attachment_pdfs) // 2 + 1}
                 )
@@ -235,9 +209,7 @@ class v1_do_artifacts_connector:
 
             # We first render all of the associated documents as attachments
             for associated_document in associated_documents:
-                attachment_pdf = await self._html_to_pdf(
-                    html_content=associated_document, browser=browser
-                )
+                attachment_pdf = await self._html_to_pdf(html_content=associated_document, browser=browser)
                 await add_attachment(attachment_pdf)
 
             # We then render all user-defined attachments
@@ -245,9 +217,7 @@ class v1_do_artifacts_connector:
                 file_type, payload_bytes = self._decode_data_url(data_url)
                 if not file_type or payload_bytes is None:
                     # TODO: Better error handling!
-                    logging.warning(
-                        "Could not parse data URL for attachment %s", index + 1
-                    )
+                    logging.warning("Could not parse data URL for attachment %s", index + 1)
                     continue
 
                 # Now we get the attachment data itself as a pdf.
@@ -257,9 +227,7 @@ class v1_do_artifacts_connector:
                     # For images, we embed the image into a pdf.
                     template = self.env.get_template("image-attachment.html")
                     rendered_image = template.render({"image_data": data_url})
-                    attachment_pdf = await self._html_to_pdf(
-                        html_content=rendered_image, browser=browser
-                    )
+                    attachment_pdf = await self._html_to_pdf(html_content=rendered_image, browser=browser)
                 elif file_type == "application/pdf":
                     # If the image is a pdf, we already have the pdf bytes.
                     attachment_pdf = payload_bytes
@@ -335,12 +303,8 @@ class v1_do_artifacts_connector:
         template_data["lupDecisions"] = template_data["lupDecisions"].split("\n")
 
         template_data["responsibleOfficial"] = template_data["responsibleOfficial"]
-        template_data["approvalDate"] = self._get_last_approval_date(
-            template_data["approvers"]
-        )
+        template_data["approvalDate"] = self._get_last_approval_date(template_data["approvers"])
         # This assumes associated documents will be attachments
-        template_data["numberOfAttachments"] = len(attachments) + len(
-            ASSOCIATED_DOCUMENTS_MAP.get(template_name, [])
-        )
+        template_data["numberOfAttachments"] = len(attachments) + len(ASSOCIATED_DOCUMENTS_MAP.get(template_name, []))
 
         return template_data

@@ -18,9 +18,7 @@ class S3Config:
         self.access_key = self._get_access_key()
         self.secret_key = self._get_secret_key()
         self.endpoint_url = os.getenv("S3_ENDPOINT_URL")  # Internal URL for operations
-        self.public_endpoint_url = os.getenv(
-            "S3_PUBLIC_ENDPOINT_URL"
-        )  # Public URL for presigned links
+        self.public_endpoint_url = os.getenv("S3_PUBLIC_ENDPOINT_URL")  # Public URL for presigned links
         self.signed_link_expiration = int(os.getenv("SIGNED_LINK_EXPIRATION", "3600"))
 
     def _get_vcap_credentials(self) -> dict[str, Any] | None:
@@ -67,9 +65,7 @@ class S3Config:
         if not key and self.vcap_creds:
             key = self.vcap_creds.get("access_key_id")
         if not key:
-            raise ValueError(
-                "AWS_ACCESS_KEY_ID must be set in environment or VCAP_SERVICES"
-            )
+            raise ValueError("AWS_ACCESS_KEY_ID must be set in environment or VCAP_SERVICES")
         return key
 
     def _get_secret_key(self) -> str:
@@ -78,9 +74,7 @@ class S3Config:
         if not key and self.vcap_creds:
             key = self.vcap_creds.get("secret_access_key")
         if not key:
-            raise ValueError(
-                "AWS_SECRET_ACCESS_KEY must be set in environment or VCAP_SERVICES"
-            )
+            raise ValueError("AWS_SECRET_ACCESS_KEY must be set in environment or VCAP_SERVICES")
         return key
 
 

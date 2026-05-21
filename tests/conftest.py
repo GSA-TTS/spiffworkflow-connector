@@ -1,4 +1,13 @@
 import os
+
+# Set required S3 env vars before any app imports so config.py doesn't blow up in CI.
+# These values are never used at runtime because S3 calls are mocked in tests.
+os.environ.setdefault("S3_BUCKET", "test-bucket")
+os.environ.setdefault("S3_REGION", "us-east-1")
+os.environ.setdefault("S3_ENDPOINT_URL", "http://localhost:9000")
+os.environ.setdefault("AWS_ACCESS_KEY_ID", "testing")
+os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "testing")
+
 from unittest.mock import patch
 
 import pytest

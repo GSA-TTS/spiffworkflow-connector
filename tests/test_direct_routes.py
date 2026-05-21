@@ -28,9 +28,7 @@ class TestDirectArtifactLink:
 
         assert result.status_code == 200
         assert result.json == {"url": "https://s3.example.com/presigned/my-artifact"}
-        mock_s3.head_object.assert_called_once_with(
-            Bucket="test-bucket", Key="my-artifact"
-        )
+        mock_s3.head_object.assert_called_once_with(Bucket="test-bucket", Key="my-artifact")
 
     @patch("main.generate_presigned_url")
     @patch("main.get_bucket_for_storage")
@@ -46,17 +44,13 @@ class TestDirectArtifactLink:
         mock_s3 = MagicMock()
         mock_create_s3.return_value = mock_s3
         mock_get_bucket.return_value = "test-bucket"
-        mock_presigned_url.return_value = (
-            "https://s3.example.com/presigned/proj-1/doc-2"
-        )
+        mock_presigned_url.return_value = "https://s3.example.com/presigned/proj-1/doc-2"
 
         result = client.simulate_get(f"{DIRECT_GET_ENDPOINT}/proj-1/doc-2")
 
         assert result.status_code == 200
         assert result.json["url"] == "https://s3.example.com/presigned/proj-1/doc-2"
-        mock_s3.head_object.assert_called_once_with(
-            Bucket="test-bucket", Key="proj-1/doc-2"
-        )
+        mock_s3.head_object.assert_called_once_with(Bucket="test-bucket", Key="proj-1/doc-2")
 
     @patch("main.get_bucket_for_storage")
     @patch("main.create_s3_client")
@@ -73,9 +67,7 @@ class TestDirectArtifactLink:
         # Simulate S3 NoSuchKey exception
         error_response = {"Error": {"Code": "404", "Message": "Not Found"}}
         mock_s3.exceptions.NoSuchKey = type("NoSuchKey", (Exception,), {})
-        mock_s3.head_object.side_effect = mock_s3.exceptions.NoSuchKey(
-            error_response, "HeadObject"
-        )
+        mock_s3.head_object.side_effect = mock_s3.exceptions.NoSuchKey(error_response, "HeadObject")
 
         result = client.simulate_get(f"{DIRECT_GET_ENDPOINT}/nonexistent-artifact")
 

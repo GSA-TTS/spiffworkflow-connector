@@ -112,12 +112,8 @@ app.add_route("/v1/do/http/PutRequest", v1_do_http_connector("PUT"))
 
 # Add new artifact routes
 artifacts = v1_do_artifacts_connector()
-app.add_route(
-    "/v1/do/artifacts/GenerateArtifact", artifacts, suffix="generate_artifact"
-)
-app.add_route(
-    "/v1/do/artifacts/GenerateHtmlPreview", artifacts, suffix="generate_html_preview"
-)
+app.add_route("/v1/do/artifacts/GenerateArtifact", artifacts, suffix="generate_artifact")
+app.add_route("/v1/do/artifacts/GenerateHtmlPreview", artifacts, suffix="generate_html_preview")
 app.add_route("/v1/do/artifacts/GetLinkToArtifact", artifacts, suffix="get_link")
 
 #
@@ -244,12 +240,8 @@ class DirectArtifactPost:
         attachments = template_data.get("attachments", [])
 
         try:
-            template_data = artifacts._format_template_data(
-                template_name, template_data, []
-            )
-            rendered_document = artifacts._render_template_html(
-                template_name, template_data
-            )
+            template_data = artifacts._format_template_data(template_name, template_data, [])
+            rendered_document = artifacts._render_template_html(template_name, template_data)
         except Exception as e:
             logger.exception("Error rendering template")
             resp.status = falcon.HTTP_500
@@ -257,14 +249,8 @@ class DirectArtifactPost:
             return
 
         associated_documents: list[str] = []
-        for associated_document_template in ASSOCIATED_DOCUMENTS_MAP.get(
-            template_name, []
-        ):
-            associated_documents.append(
-                artifacts._render_template_html(
-                    associated_document_template, template_data
-                )
-            )
+        for associated_document_template in ASSOCIATED_DOCUMENTS_MAP.get(template_name, []):
+            associated_documents.append(artifacts._render_template_html(associated_document_template, template_data))
 
         try:
             pdf_buffer = await artifacts._generate_pdf_with_attachments(
@@ -291,9 +277,7 @@ class DirectArtifactPost:
             return
 
         try:
-            response = artifacts._generate_artifact_response(
-                s3_client, bucket, artifact_id, generate_links
-            )
+            response = artifacts._generate_artifact_response(s3_client, bucket, artifact_id, generate_links)
         except Exception as e:
             logger.exception("Error generating artifact response links")
             resp.status = falcon.HTTP_500

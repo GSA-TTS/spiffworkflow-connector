@@ -105,9 +105,7 @@ class TestArtifactsService:
         test_data = {"id": "s3://test-bucket/test-artifact-123", "storage": "s3"}
 
         # This should hit the endpoint (might error due to missing S3 setup in test)
-        result = client.simulate_post(
-            f"{API_ENDPOINT}GetLinkToArtifact", json=test_data
-        )
+        result = client.simulate_post(f"{API_ENDPOINT}GetLinkToArtifact", json=test_data)
 
         # Verify endpoint exists (status could be 500 due to missing config, but not 404)
         # Make sure the response is json
