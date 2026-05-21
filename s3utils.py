@@ -1,11 +1,12 @@
-from typing import Optional
+from urllib.parse import urlparse
+
 import boto3
 from botocore.config import Config
-from urllib.parse import urlparse
+
 from config import s3_config
 
 
-def create_s3_client(storage_url: Optional[str] = None):
+def create_s3_client(storage_url: str | None = None):
     """Create an S3 client using either environment config or custom storage URL."""
     if storage_url:
         # Parse s3:// URL for custom storage
@@ -63,7 +64,7 @@ def create_s3_client(storage_url: Optional[str] = None):
     return boto3.client("s3", **client_kwargs)
 
 
-def get_bucket_for_storage(storage_url: Optional[str] = None) -> str:
+def get_bucket_for_storage(storage_url: str | None = None) -> str:
     """Get the S3 bucket name from either storage URL or config."""
     if storage_url:
         parsed = urlparse(storage_url)

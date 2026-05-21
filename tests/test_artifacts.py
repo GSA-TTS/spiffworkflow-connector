@@ -148,7 +148,6 @@ class TestBLMSpecificFlows:
                     {"name": "Approver 2", "date": "2023-09-29"},
                 ],
                 "responsibleOfficial": "responsibleOfficial_val",
-                "lupDecisions": "lupDecisions_val",
                 "publicHealthImpacts": "publicHealthImpacts_val",
                 "naturalResourcesImpacts": "naturalResourcesImpacts_val",
                 "controversialEffects": "controversialEffects_val",

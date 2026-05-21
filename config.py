@@ -1,7 +1,7 @@
-import os
 import json
 import logging
-from typing import Optional, Dict, Any
+import os
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class S3Config:
         )  # Public URL for presigned links
         self.signed_link_expiration = int(os.getenv("SIGNED_LINK_EXPIRATION", "3600"))
 
-    def _get_vcap_credentials(self) -> Optional[Dict[str, Any]]:
+    def _get_vcap_credentials(self) -> dict[str, Any] | None:
         """Get S3 credentials from VCAP_SERVICES if available."""
         vcap_services = os.getenv("VCAP_SERVICES")
         if not vcap_services:
@@ -32,7 +32,7 @@ class S3Config:
         try:
             services = json.loads(vcap_services)
             # Look for an S3 service named "artifacts"
-            for service_type, instances in services.items():
+            for _service_type, instances in services.items():
                 for instance in instances:
                     if instance.get("name") == "artifacts":
                         return instance.get("credentials")

@@ -1,4 +1,3 @@
-from unittest.mock import patch, MagicMock
 from falcon import testing
 
 

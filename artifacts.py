@@ -1,24 +1,22 @@
-import os
-import json
-import io
-import logging
-from typing import Any, Optional
-from playwright.async_api import Browser
-import html
-
-from io import BytesIO
 import base64
-from pypdf import PdfReader, PdfWriter
+import html
+import io
+import json
+import logging
+import os
+from functools import wraps
+from io import BytesIO
+from typing import Any
 
 from jinja2 import Environment, FileSystemLoader
-from playwright.async_api import async_playwright
-from functools import wraps
+from playwright.async_api import Browser, async_playwright
+from pypdf import PdfReader, PdfWriter
 
 from s3utils import (
     create_s3_client,
-    get_bucket_for_storage,
-    generate_private_link,
     generate_presigned_url,
+    generate_private_link,
+    get_bucket_for_storage,
 )
 
 logger = logging.getLogger(__name__)
@@ -253,7 +251,7 @@ class v1_do_artifacts_connector:
                     continue
 
                 # Now we get the attachment data itself as a pdf.
-                attachment_pdf: Optional[bytes] = None
+                attachment_pdf: bytes | None = None
 
                 if file_type.startswith("image/"):
                     # For images, we embed the image into a pdf.
@@ -286,7 +284,7 @@ class v1_do_artifacts_connector:
         pdf_buffer = await page.pdf(print_background=True)
         return pdf_buffer
 
-    def _decode_data_url(self, data_url: str) -> tuple[Optional[str], Optional[bytes]]:
+    def _decode_data_url(self, data_url: str) -> tuple[str | None, bytes | None]:
         """
         Parse a data: URL like:
             data:image/png;base64,iVBORw0KGgoAAA...
