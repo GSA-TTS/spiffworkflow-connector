@@ -46,6 +46,10 @@ RUN_AS = { default = "" }
 help = "Build docker images"
 cmd = "docker compose -f docker-compose.yml -f dev.docker-compose.yml build"
 
+[tool.poe.tasks.rebuild]
+help = "Force rebuild docker images without cache"
+cmd = "docker compose -f docker-compose.yml -f dev.docker-compose.yml build --no-cache"
+
 [tool.poe.tasks.up]
 help = "Start dev environment (docker compose up)"
 cmd = "docker compose -f docker-compose.yml -f dev.docker-compose.yml up -d"
