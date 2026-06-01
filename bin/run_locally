@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# customizations go here
+
+# Run the original command
+exec "$@"

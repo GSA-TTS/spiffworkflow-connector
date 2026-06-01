@@ -1,0 +1,12 @@
+services:
+  connector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "${PORT:-8080}"
+      XDG_CACHE_HOME: "/app/.cache"
+      DEPLOYMENT: "prod"
+    ports:
+      - "${PORT:-8080}:${PORT:-8080}/tcp"
