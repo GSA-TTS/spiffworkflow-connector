@@ -50,7 +50,7 @@ class v1_do_http_connector:
         if basic_auth_username and basic_auth_password:
             auth = (basic_auth_username, basic_auth_password)
 
-        # TODO: error handling
+        # TODO: add better error handling
         http_response = await http_client.request(
             self.request_method,
             url,

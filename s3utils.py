@@ -29,6 +29,8 @@ def create_s3_client(storage_url: str | None = None):
         "config": Config(
             region_name=region,
             signature_version="s3v4",
+            request_checksum_calculation="when_required",
+            response_checksum_validation="when_required",
         ),
     }
 
