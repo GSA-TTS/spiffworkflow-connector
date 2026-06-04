@@ -178,7 +178,7 @@ embedded_connectors = [
 
 
 class DirectArtifactLink:
-    async def on_get(self, req, resp, artifact_id):
+    async def on_get(self, req: falcon.asgi.Request, resp: falcon.asgi.Response, artifact_id):
         import urllib.parse
 
         artifact_id = urllib.parse.unquote(artifact_id)
