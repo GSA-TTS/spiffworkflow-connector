@@ -30,6 +30,7 @@ def fake_filesystem():
     real_templates_path = os.path.join(base_dir, "templates")
 
     with Patcher() as patcher:
+        assert patcher.fs is not None
         patcher.fs.add_real_directory(real_templates_path)
 
         # Create a generic test template

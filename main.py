@@ -2,6 +2,7 @@ import logging
 from io import BytesIO
 
 import falcon.asgi
+import falcon.media
 import httpx
 import orjson
 
@@ -84,8 +85,6 @@ class v1_do_http_connector:
 #
 # App
 #
-
-
 extra_handlers = {
     "application/json": falcon.media.JSONHandler(
         dumps=orjson.dumps,
@@ -97,86 +96,8 @@ app = falcon.asgi.App(
     cors_enable=True,
 )
 
-app.req_options.media_handlers.update(extra_handlers)
-app.resp_options.media_handlers.update(extra_handlers)
 
-app.add_route("/liveness", liveness())
-app.add_route("/v1/commands", v1_commands())
-
-app.add_route("/v1/do/http/DeleteRequest", v1_do_http_connector("DELETE"))
-app.add_route("/v1/do/http/GetRequest", v1_do_http_connector("GET"))
-app.add_route("/v1/do/http/HeadRequest", v1_do_http_connector("HEAD"))
-app.add_route("/v1/do/http/PatchRequest", v1_do_http_connector("PATCH"))
-app.add_route("/v1/do/http/PostRequest", v1_do_http_connector("POST"))
-app.add_route("/v1/do/http/PutRequest", v1_do_http_connector("PUT"))
-
-# Add new artifact routes
-artifacts = v1_do_artifacts_connector()
-app.add_route("/v1/do/artifacts/GenerateArtifact", artifacts, suffix="generate_artifact")
-app.add_route("/v1/do/artifacts/GenerateHtmlPreview", artifacts, suffix="generate_html_preview")
-app.add_route("/v1/do/artifacts/GetLinkToArtifact", artifacts, suffix="get_link")
-
-#
-# Static Data
-#
-
-generate_artifact_params = [
-    {"id": "id", "type": "str", "required": True},
-    {"id": "template", "type": "str", "required": True},
-    {"id": "data", "type": "dict", "required": True},
-    {"id": "generate_links", "type": "bool", "required": False},
-    {"id": "storage", "type": "str", "required": False},
-]
-
-generate_html_preview_params = [
-    {"id": "id", "type": "str", "required": True},
-    {"id": "template", "type": "str", "required": True},
-    {"id": "data", "type": "dict", "required": True},
-]
-
-get_link_params = [
-    {"id": "id", "type": "str", "required": True},
-    {"id": "storage", "type": "str", "required": False},
-]
-
-http_base_params = [
-    {"id": "url", "type": "str", "required": True},
-    {"id": "headers", "type": "any", "required": False},
-]
-
-http_basic_auth_params = [
-    {"id": "basic_auth_username", "type": "str", "required": False},
-    {"id": "basic_auth_password", "type": "str", "required": False},
-]
-
-http_ro_params = [
-    *http_base_params,
-    {"id": "params", "type": "any", "required": False},
-    *http_basic_auth_params,
-]
-
-http_rw_params = [
-    *http_base_params,
-    {"id": "data", "type": "any", "required": False},
-    *http_basic_auth_params,
-]
-
-embedded_connectors = [
-    {"id": "http/DeleteRequest", "parameters": http_rw_params},
-    {"id": "http/GetRequest", "parameters": http_ro_params},
-    {"id": "http/HeadRequest", "parameters": http_ro_params},
-    {"id": "http/PatchRequest", "parameters": http_rw_params},
-    {"id": "http/PostRequest", "parameters": http_rw_params},
-    {"id": "http/PutRequest", "parameters": http_rw_params},
-    {"id": "artifacts/GenerateArtifact", "parameters": generate_artifact_params},
-    {"id": "artifacts/GenerateHtmlPreview", "parameters": generate_html_preview_params},
-    {"id": "artifacts/GetLinkToArtifact", "parameters": get_link_params},
-]
-
-
-## DIRECT ROUTES
-
-
+## ASTRO / DIRECT ROUTES
 class DirectArtifactLink:
     async def on_get(self, req: falcon.asgi.Request, resp: falcon.asgi.Response, artifact_id):
         import urllib.parse
@@ -211,6 +132,7 @@ class DirectArtifactLink:
         resp.media = {"url": url}
 
 
+# artifact_id shape: {projectId}/{processId}/{artifactId}
 app.add_route("/api/artifacts/{artifact_id:path}", DirectArtifactLink())
 
 
@@ -289,3 +211,82 @@ class DirectArtifactPost:
 
 
 app.add_route("/api/artifacts/GenerateArtifact", DirectArtifactPost())
+
+
+## SPIFF ROUTES
+
+app.req_options.media_handlers.update(extra_handlers)
+app.resp_options.media_handlers.update(extra_handlers)
+
+app.add_route("/liveness", liveness())
+app.add_route("/v1/commands", v1_commands())
+
+app.add_route("/v1/do/http/DeleteRequest", v1_do_http_connector("DELETE"))
+app.add_route("/v1/do/http/GetRequest", v1_do_http_connector("GET"))
+app.add_route("/v1/do/http/HeadRequest", v1_do_http_connector("HEAD"))
+app.add_route("/v1/do/http/PatchRequest", v1_do_http_connector("PATCH"))
+app.add_route("/v1/do/http/PostRequest", v1_do_http_connector("POST"))
+app.add_route("/v1/do/http/PutRequest", v1_do_http_connector("PUT"))
+
+# Add new artifact routes
+artifacts = v1_do_artifacts_connector()
+app.add_route("/v1/do/artifacts/GenerateArtifact", artifacts, suffix="generate_artifact")
+app.add_route("/v1/do/artifacts/GenerateHtmlPreview", artifacts, suffix="generate_html_preview")
+app.add_route("/v1/do/artifacts/GetLinkToArtifact", artifacts, suffix="get_link")
+
+#
+# Static Data
+#
+
+generate_artifact_params = [
+    {"id": "id", "type": "str", "required": True},
+    {"id": "template", "type": "str", "required": True},
+    {"id": "data", "type": "dict", "required": True},
+    {"id": "generate_links", "type": "bool", "required": False},
+    {"id": "storage", "type": "str", "required": False},
+]
+
+generate_html_preview_params = [
+    {"id": "id", "type": "str", "required": True},
+    {"id": "template", "type": "str", "required": True},
+    {"id": "data", "type": "dict", "required": True},
+]
+
+get_link_params = [
+    {"id": "id", "type": "str", "required": True},
+    {"id": "storage", "type": "str", "required": False},
+]
+
+http_base_params = [
+    {"id": "url", "type": "str", "required": True},
+    {"id": "headers", "type": "any", "required": False},
+]
+
+http_basic_auth_params = [
+    {"id": "basic_auth_username", "type": "str", "required": False},
+    {"id": "basic_auth_password", "type": "str", "required": False},
+]
+
+http_ro_params = [
+    *http_base_params,
+    {"id": "params", "type": "any", "required": False},
+    *http_basic_auth_params,
+]
+
+http_rw_params = [
+    *http_base_params,
+    {"id": "data", "type": "any", "required": False},
+    *http_basic_auth_params,
+]
+
+embedded_connectors = [
+    {"id": "http/DeleteRequest", "parameters": http_rw_params},
+    {"id": "http/GetRequest", "parameters": http_ro_params},
+    {"id": "http/HeadRequest", "parameters": http_ro_params},
+    {"id": "http/PatchRequest", "parameters": http_rw_params},
+    {"id": "http/PostRequest", "parameters": http_rw_params},
+    {"id": "http/PutRequest", "parameters": http_rw_params},
+    {"id": "artifacts/GenerateArtifact", "parameters": generate_artifact_params},
+    {"id": "artifacts/GenerateHtmlPreview", "parameters": generate_html_preview_params},
+    {"id": "artifacts/GetLinkToArtifact", "parameters": get_link_params},
+]
