@@ -11,6 +11,8 @@ RUN apt-get update && apt-get install -y curl && \
 
 ENV PATH="/root/.cargo/bin:$PATH"
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy dependency files
 COPY pyproject.toml uv.lock ./

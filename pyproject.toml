@@ -24,7 +24,92 @@ constraint-dependencies = ["urllib3>=2.6.0"]
 [dependency-groups]
 dev = [
     "pyfakefs>=6.2.0",
+    "poethepoet>=0.34.0",
     "pytest>=8.4.2",
     "pytest-asyncio>=1.2.0",
     "pytest-cov>=7.0.0",
+    "ruff>=0.11.0",
 ]
+
+# --------------------------------------------------------------------------
+# Task runner (poethepoet)
+# --------------------------------------------------------------------------
+[tool.poe.env]
+USER_ID = { default = "" }
+GROUP_ID = { default = "" }
+RUN_AS = { default = "" }
+
+[tool.poe.tasks]
+
+# --- Docker / Dev environment ---
+[tool.poe.tasks.build]
+help = "Build docker images"
+cmd = "docker compose -f docker-compose.yml -f dev.docker-compose.yml build"
+
+[tool.poe.tasks.rebuild]
+help = "Force rebuild docker images without cache"
+cmd = "docker compose -f docker-compose.yml -f dev.docker-compose.yml build --no-cache"
+
+[tool.poe.tasks.up]
+help = "Start dev environment (docker compose up)"
+cmd = "docker compose -f docker-compose.yml -f dev.docker-compose.yml up -d"
+
+[tool.poe.tasks.down]
+help = "Stop dev environment (docker compose down)"
+cmd = "docker compose -f docker-compose.yml -f dev.docker-compose.yml down -v"
+
+[tool.poe.tasks.dev]
+help = "Full dev reset: stop, build, start"
+sequence = ["down", "build", "up"]
+
+[tool.poe.tasks.logs]
+help = "Tail connector logs"
+cmd = "docker compose -f docker-compose.yml -f dev.docker-compose.yml logs -f connector"
+
+[tool.poe.tasks.sh]
+help = "Shell into connector container"
+cmd = "docker compose -f docker-compose.yml -f dev.docker-compose.yml run --rm connector /bin/bash"
+
+# --- Quality / CI ---
+[tool.poe.tasks.lint]
+help = "Run ruff linter"
+cmd = "ruff check ."
+
+[tool.poe.tasks.format]
+help = "Run ruff formatter"
+cmd = "ruff format ."
+
+[tool.poe.tasks.format-check]
+help = "Check formatting without modifying files"
+cmd = "ruff format --check ."
+
+[tool.poe.tasks.test]
+help = "Run pytest with coverage"
+cmd = "pytest -v --cov=. --cov-report=term-missing"
+
+[tool.poe.tasks.check]
+help = "Run all checks (lint + format-check + test)"
+sequence = ["lint", "format-check", "test"]
+
+# --------------------------------------------------------------------------
+# Ruff
+# --------------------------------------------------------------------------
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501", # line too long (handled by formatter)
+]
+
+[tool.ruff.format]
+quote-style = "double"

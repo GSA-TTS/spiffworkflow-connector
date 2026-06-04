@@ -5,12 +5,33 @@ COPY --from=ghcr.io/astral-sh/uv:0.8.21 /uv /uvx /bin/
 WORKDIR /app
 
 # Install system dependencies and uv
-RUN apt-get update && apt-get install -y wget curl && \
+RUN apt-get update && apt-get install -y wget curl ca-certificates && \
   curl -LsSf https://astral.sh/uv/install.sh | sh && \
   apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Conditionally install custom CA certificates (e.g., Zscaler)
+COPY certs/ /tmp/custom-certs/
+RUN set -e && \
+  if ls /tmp/custom-certs/*.pem 1>/dev/null 2>&1; then \
+  for f in /tmp/custom-certs/*.pem; do \
+  cp "$f" "/usr/local/share/ca-certificates/$(basename "${f%.pem}.crt")"; \
+  done && \
+  update-ca-certificates && \
+  echo "Custom CA certificates installed"; \
+  else \
+  echo "No custom CA certificates found"; \
+  fi && \
+  rm -rf /tmp/custom-certs
+
+# Point uv/rustls and Python requests at the system CA bundle
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+
 ENV PATH="/root/.cargo/bin:$PATH"
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+ENV UV_PYTHON_DOWNLOADS=never
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy dependency files
 COPY pyproject.toml uv.lock ./

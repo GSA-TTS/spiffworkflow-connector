@@ -1,11 +1,21 @@
-from contextlib import contextmanager, ExitStack
+import os
+
+# Set required S3 env vars before any app imports so config.py doesn't blow up in CI.
+# These values are never used at runtime because S3 calls are mocked in tests.
+os.environ.setdefault("S3_BUCKET", "test-bucket")
+os.environ.setdefault("S3_REGION", "us-east-1")
+os.environ.setdefault("S3_ENDPOINT_URL", "http://localhost:9000")
+os.environ.setdefault("AWS_ACCESS_KEY_ID", "testing")
+os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "testing")
+
+from unittest.mock import patch
+
 import pytest
 from falcon import testing
-import os
-from main import app, artifacts
-from pyfakefs.fake_filesystem_unittest import Patcher
 from jinja2 import Environment, FileSystemLoader
-from unittest.mock import patch
+from pyfakefs.fake_filesystem_unittest import Patcher
+
+from main import app, artifacts
 
 
 @pytest.fixture
@@ -20,6 +30,7 @@ def fake_filesystem():
     real_templates_path = os.path.join(base_dir, "templates")
 
     with Patcher() as patcher:
+        assert patcher.fs is not None
         patcher.fs.add_real_directory(real_templates_path)
 
         # Create a generic test template
