@@ -215,7 +215,7 @@ app.add_route("/api/artifacts/{artifact_id:path}", DirectArtifactLink())
 
 
 class DirectArtifactPost:
-    async def on_post(self, req, resp):
+    async def on_post(self, req: falcon.asgi.Request, resp: falcon.asgi.Response):
         try:
             params = await req.media
         except Exception as e:
