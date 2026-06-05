@@ -8,30 +8,32 @@
   <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <div class="container mx-auto p-5">
-      <header role="banner" class="flex">
-        <div class="w-15 flex-none">{% include "blm_logo.svg" %}</div>
-        <div class="flex-1 ml-3">
-          <p class="agency__name uppercase">
-            United States Department of the Interior
-          </p>
-          <p class="agency__sub-name">Bureau of Land Management</p>
-        </div>
-      </header>
-      <section class="flex mt-2" aria-label="Document Information">
-        <address class="flex-1">
-          <ul class="list-none">
-            <li>{{fieldofficeName}}</li>
-            <li>{{streetAddress}}</li>
-            <li>{{city}}, {{zipCode}}</li>
-          </ul>
-        </address>
-        <div class="flex-1">
-          <ul class="list-none float-right">
-            <li>Categorical Exclusion</li>
-            <li>{{categoricalExclusionID}}</li>
-          </ul>
-        </div>
-      </section>
+      <div class="place-items-center">
+        <header role="banner" class="flex">
+          <div class="w-15 flex-none">{% include "blm_logo.svg" %}</div>
+          <div class="flex-1 ml-3">
+            <p class="agency__name uppercase">
+              United States Department of the Interior
+            </p>
+            <p class="agency__sub-name">Bureau of Land Management</p>
+          </div>
+        </header>
+        <section class="flex mt-2" aria-label="Document Information">
+          <address class="flex-1">
+            <ul class="list-none">
+              <li>{{fieldofficeName}}</li>
+              <li>{{streetAddress}}</li>
+              <li>{{city}}, {{zipCode}}</li>
+            </ul>
+          </address>
+          <div class="flex-1">
+            <ul class="list-none float-right">
+              <li>Categorical Exclusion</li>
+              <li>{{categoricalExclusionID}}</li>
+            </ul>
+          </div>
+        </section>
+      </div>
       <main role="main" id="main-content">
         <h1 class="sr-only">{{projectTitle}}</h1>
         <ol class="list-upper-alpha mt-5">
@@ -76,80 +78,101 @@
             <p>The proposed action will not:</p>
             <ol>
               <li>
-                <h4>Have significant impacts on public health or safety.</h4>
-                <p><strong>Rationale:</strong> {{publicHealthImpacts}}</p>
+                <h4>
+                  <strong
+                    >Have significant impacts on public health or
+                    safety.</strong
+                  >
+                </h4>
+                <p>Rationale:{{publicHealthImpacts}}</p>
               </li>
               <li>
                 <h4>
-                  Have significant impacts on such natural resources and unique
-                  geographic characteristics as historic or cultural resources;
-                  park, recreation or refuge lands; wilderness areas; wild or
-                  scenic rivers; national natural landmarks; sole or principal
-                  drinking water aquifers; prime farmlands; wetlands;
-                  floodplains; national monuments; migratory birds; and other
-                  ecologically significant or critical areas.
+                  <strong>
+                    Have significant impacts on such natural resources and
+                    unique geographic characteristics as historic or cultural
+                    resources; park, recreation or refuge lands; wilderness
+                    areas; wild or scenic rivers; national natural landmarks;
+                    sole or principal drinking water aquifers; prime farmlands;
+                    wetlands; floodplains; national monuments; migratory birds;
+                    and other ecologically significant or critical areas.
+                  </strong>
                 </h4>
-                <p><strong>Rationale:</strong> {{naturalResourcesImpacts}}</p>
+                <p>Rationale: {{naturalResourcesImpacts}}</p>
               </li>
               <li>
                 <h4>
-                  Have highly uncertain and potentially significant
-                  environmental effects or involve unique or unknown
-                  environmental risks.
+                  <strong>
+                    Have highly uncertain and potentially significant
+                    environmental effects or involve unique or unknown
+                    environmental risks.
+                  </strong>
                 </h4>
-                <p><strong>Rationale</strong> {{controversialEffects}}</p>
+                <p>Rationale: {{controversialEffects}}</p>
               </li>
               <li>
                 <h4>
-                  Establish a precedent for future action or represent a
-                  decision in principle about future actions with potentially
-                  significant environmental effects.
+                  <strong>
+                    Establish a precedent for future action or represent a
+                    decision in principle about future actions with potentially
+                    significant environmental effects.
+                  </strong>
                 </h4>
-                <p><strong>Rationale:</strong> {{precedentForFutureAction}}</p>
+                <p>Rationale: {{precedentForFutureAction}}</p>
               </li>
               <li>
                 <h4>
-                  Have a direct relationship to other actions that implicate
-                  potentially significant environmental effects.
+                  <strong>
+                    Have a direct relationship to other actions that implicate
+                    potentially significant environmental effects.
+                  </strong>
                 </h4>
-                <p><strong>Rationale:</strong> {{cumulativeImpacts}}</p>
+                <p>Rationale: {{cumulativeImpacts}}</p>
               </li>
               <li>
                 <h4>
-                  Have significant impacts on properties listed, or eligible for
-                  listing, on the National Register of Historic Places as
-                  determined by the bureau.
+                  <strong>
+                    Have significant impacts on properties listed, or eligible
+                    for listing, on the National Register of Historic Places as
+                    determined by the bureau.
+                  </strong>
                 </h4>
-                <p><strong>Rationale:</strong> {{historicProperties}}</p>
+                <p>Rationale: {{historicProperties}}</p>
               </li>
               <li>
                 <h4>
-                  Have significant impacts on species listed, or proposed to be
-                  listed, on the List of Endangered or Threatened Species, or
-                  have significant impacts on designated Critical Habitat for
-                  these species.
+                  <strong>
+                    Have significant impacts on species listed, or proposed to
+                    be listed, on the List of Endangered or Threatened Species,
+                    or have significant impacts on designated Critical Habitat
+                    for these species.
+                  </strong>
                 </h4>
-                <p><strong>Rationale:</strong> {{endangeredSpeciesImpacts}}</p>
+                <p>Rationale: {{endangeredSpeciesImpacts}}</p>
               </li>
               <li>
                 <h4>
-                  Significantly limit access to and ceremonial use of Indian
-                  sacred sites on Federal lands by Indian religious
-                  practitioners or significantly adversely affect the physical
-                  integrity of such sacred sites.
+                  <strong>
+                    Significantly limit access to and ceremonial use of Indian
+                    sacred sites on Federal lands by Indian religious
+                    practitioners or significantly adversely affect the physical
+                    integrity of such sacred sites.
+                  </strong>
                 </h4>
-                <p><strong>Rationale:</strong> {{limitAccessToSacredSites}}</p>
+                <p>Rationale: {{limitAccessToSacredSites}}</p>
               </li>
               <li>
                 <h4>
-                  Contribute to potentially significant effects resulting from
-                  the introduction, continued existence, or spread of noxious
-                  weeds or non-native invasive species known to occur in the
-                  area or from other actions that promote the introduction,
-                  growth, or expansion of the range of such species (Federal
-                  Noxious Weed Control Act).
+                  <strong>
+                    Contribute to potentially significant effects resulting from
+                    the introduction, continued existence, or spread of noxious
+                    weeds or non-native invasive species known to occur in the
+                    area or from other actions that promote the introduction,
+                    growth, or expansion of the range of such species (Federal
+                    Noxious Weed Control Act).
+                  </strong>
                 </h4>
-                <p><strong>Rationale:</strong> {{promoteNoxiousWeeds}}</p>
+                <p>Rationale: {{promoteNoxiousWeeds}}</p>
               </li>
             </ol>
           </li>
