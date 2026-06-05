@@ -1,227 +1,228 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <title>{{projectTitle}}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    {% include "base-styles.html" %} {% include "tailwind.html" %}
-  </head>
-  <body>
-    <a href="#main-content" class="skip-link">Skip to main content</a>
-    <div class="container mx-auto p-5">
-      <div class="place-items-center">
-        <header role="banner" class="flex">
-          <div class="w-15 flex-none">{% include "blm_logo.svg" %}</div>
-          <div class="flex-1 ml-3">
-            <p class="agency__name uppercase">
-              United States Department of the Interior
-            </p>
-            <p class="agency__sub-name">Bureau of Land Management</p>
-          </div>
-        </header>
-        <section class="flex mt-2" aria-label="Document Information">
-          <address class="flex-1">
-            <ul class="list-none">
-              <li>{{fieldofficeName}}</li>
-              <li>{{streetAddress}}</li>
-              <li>{{city}}, {{zipCode}}</li>
-            </ul>
-          </address>
-          <div class="flex-1">
-            <ul class="list-none float-right">
-              <li>Categorical Exclusion</li>
-              <li>{{categoricalExclusionID}}</li>
-            </ul>
-          </div>
-        </section>
-      </div>
-      <main role="main" id="main-content">
-        <h1 class="sr-only">{{projectTitle}}</h1>
-        <ol class="list-upper-alpha mt-5">
-          <li>
-            <h3>Background:</h3>
-            <p>
-              Proposed Action Title/Type: {{projectTitle}}
-              <br />Location of Proposed Action: {{locationOfProposedAction}}
-              <br />Lease/Serial/Case File No (if any):
-              {{leaseSerialCaseFileNumber}} <br />Applicant: {{applicant}}
-            </p>
-          </li>
-          <li>
-            <h3>Description of Proposed Action:</h3>
-            <p>{{projectDescription}}</p>
-          </li>
-          <li>
-            <h3>Land Use Plan Conformance:</h3>
-            <p>
-              Land Use Plan Name: {{ landUsePlanName }}<br />
-              Date Approved: {{ dateApproved }}<br />
-              The proposed action is in conformance with the applicable LUP
-              because...
-            </p>
-            {% for decision in lupDecisions %}
-            <p style="margin-top: 0.5em">{{ decision }}</p>
-            {% endfor %}
-          </li>
-          <li>
-            <h3>Compliance with NEPA:</h3>
-            <p>
-              The Proposed Action is categorically excluded from further
-              documentation under the National Environmental Policy Act (NEPA)
-              in accordance with:
-            </p>
-            {% for exclusion in exclusions %}
-            <p style="margin-top: 0.5em">{{ exclusion }}</p>
-            {% endfor %}
-          </li>
-          <li>
-            <h3>Extraordinary Circumstances Review:</h3>
-            <p>The proposed action will not:</p>
-            <ol>
-              <li>
-                <h4>
-                  <strong
-                    >Have significant impacts on public health or
-                    safety.</strong
-                  >
-                </h4>
-                <p>Rationale:{{publicHealthImpacts}}</p>
-              </li>
-              <li>
-                <h4>
-                  <strong>
-                    Have significant impacts on such natural resources and
-                    unique geographic characteristics as historic or cultural
-                    resources; park, recreation or refuge lands; wilderness
-                    areas; wild or scenic rivers; national natural landmarks;
-                    sole or principal drinking water aquifers; prime farmlands;
-                    wetlands; floodplains; national monuments; migratory birds;
-                    and other ecologically significant or critical areas.
-                  </strong>
-                </h4>
-                <p>Rationale: {{naturalResourcesImpacts}}</p>
-              </li>
-              <li>
-                <h4>
-                  <strong>
-                    Have highly uncertain and potentially significant
-                    environmental effects or involve unique or unknown
-                    environmental risks.
-                  </strong>
-                </h4>
-                <p>Rationale: {{controversialEffects}}</p>
-              </li>
-              <li>
-                <h4>
-                  <strong>
-                    Establish a precedent for future action or represent a
-                    decision in principle about future actions with potentially
-                    significant environmental effects.
-                  </strong>
-                </h4>
-                <p>Rationale: {{precedentForFutureAction}}</p>
-              </li>
-              <li>
-                <h4>
-                  <strong>
-                    Have a direct relationship to other actions that implicate
-                    potentially significant environmental effects.
-                  </strong>
-                </h4>
-                <p>Rationale: {{cumulativeImpacts}}</p>
-              </li>
-              <li>
-                <h4>
-                  <strong>
-                    Have significant impacts on properties listed, or eligible
-                    for listing, on the National Register of Historic Places as
-                    determined by the bureau.
-                  </strong>
-                </h4>
-                <p>Rationale: {{historicProperties}}</p>
-              </li>
-              <li>
-                <h4>
-                  <strong>
-                    Have significant impacts on species listed, or proposed to
-                    be listed, on the List of Endangered or Threatened Species,
-                    or have significant impacts on designated Critical Habitat
-                    for these species.
-                  </strong>
-                </h4>
-                <p>Rationale: {{endangeredSpeciesImpacts}}</p>
-              </li>
-              <li>
-                <h4>
-                  <strong>
-                    Significantly limit access to and ceremonial use of Indian
-                    sacred sites on Federal lands by Indian religious
-                    practitioners or significantly adversely affect the physical
-                    integrity of such sacred sites.
-                  </strong>
-                </h4>
-                <p>Rationale: {{limitAccessToSacredSites}}</p>
-              </li>
-              <li>
-                <h4>
-                  <strong>
-                    Contribute to potentially significant effects resulting from
-                    the introduction, continued existence, or spread of noxious
-                    weeds or non-native invasive species known to occur in the
-                    area or from other actions that promote the introduction,
-                    growth, or expansion of the range of such species (Federal
-                    Noxious Weed Control Act).
-                  </strong>
-                </h4>
-                <p>Rationale: {{promoteNoxiousWeeds}}</p>
-              </li>
-            </ol>
-          </li>
-          <li>
-            <h3>Conclusion</h3>
-            <p>
-              This categorical exclusion is appropriate in this situation
-              because there are no extraordinary circumstances having effects
-              that significantly affect the environment. The proposed action has
-              been reviewed, and none of the extraordinary circumstances
-              described in 43 CFR Part 46.215 apply. I considered
-              {{categoricalExclusionJustification}}
-            </p>
-          </li>
-          <li>
-            <h3>Signature</h3>
-            <div aria-label="Signature area">________________________</div>
-          </li>
-        </ol>
-      </main>
-      <footer role="contentinfo">
-        <section class="mt-3">
-          <p>
-            <strong>Responsible Official:</strong> {{responsibleOfficial}}
-            <strong>Date:</strong> {{approvalDate}}
+
+<head>
+  <title>{{projectTitle}}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  {% include "base-styles.html" %} {% include "tailwind.html" %}
+</head>
+
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <div class="container mx-auto p-5">
+    <div class="place-items-center">
+      <header role="banner" class="flex">
+        <div class="w-15 flex-none">{% include "blm_logo.svg" %}</div>
+        <div class="flex-1 ml-3">
+          <p class="agency__name uppercase">
+            United States Department of the Interior
           </p>
-        </section>
-        <section class="mt-3">
-          <h3 class="font-bold">Contact Person</h3>
-          <p>
-            For additional information concerning this CX review, please
-            contact:
-          </p>
-          <address>
-            {{contactPerson}}, {{contactTitle}}<br />
-            {{officeName}} {{mailingAddress}} {{telephoneNumber}}
-          </address>
-        </section>
-        {% if numberOfAttachments > 0 %}
-        <section class="mt-3">
-          <h3 class="font-bold">ATTACHMENTS:</h3>
-          <p>
-            {% if numberOfAttachments == 1 %} {{ numberOfAttachments }}
-            attachment is attached below. {% else %} {{ numberOfAttachments }}
-            attachments are attached below. {% endif %}
-          </p>
-        </section>
-        {% endif %}
-      </footer>
+          <p class="agency__sub-name">Bureau of Land Management</p>
+        </div>
+      </header>
+      <section class="flex mt-2" aria-label="Document Information">
+        <address class="flex-1">
+          <ul class="list-none">
+            <li>{{fieldofficeName}}</li>
+            <li>{{streetAddress}}</li>
+            <li>{{city}}, {{zipCode}}</li>
+          </ul>
+        </address>
+        <div class="flex-1">
+          <ul class="list-none float-right">
+            <li>Categorical Exclusion</li>
+            <li>{{categoricalExclusionID}}</li>
+          </ul>
+        </div>
+      </section>
     </div>
-  </body>
+    <main role="main" id="main-content">
+      <h1 class="sr-only">{{projectTitle}}</h1>
+      <ol class="list-upper-alpha mt-5">
+        <li>
+          <h3>Background:</h3>
+          <p>Proposed Action Title/Type: {{projectTitle}}</p>
+          <p>
+            Location of Proposed Action: {% if locationOfProposedActionMultiline %}<div style="margin-left: 1em; white-space: pre-line">{{ locationOfProposedAction }}</div>{% else %}{{ locationOfProposedAction }}{% endif %}
+          </p>
+          <p>Lease/Serial/Case File No (if any): {{leaseSerialCaseFileNumber}}</p>
+          <p>Applicant: {{applicant}}</p>
+        </li>
+        <li>
+          <h3>Description of Proposed Action:</h3>
+          <p>{{projectDescription}}</p>
+        </li>
+        <li>
+          <h3>Land Use Plan Conformance:</h3>
+          <p>
+            Land Use Plan Name: {{ landUsePlanName }}<br />
+            Date Approved: {{ dateApproved }}<br />
+            The proposed action is in conformance with the applicable LUP
+            because...
+          </p>
+          {% for decision in lupDecisions %}
+          <p style="margin-top: 0.5em">{{ decision }}</p>
+          {% endfor %}
+        </li>
+        <li>
+          <h3>Compliance with NEPA:</h3>
+          <p>
+            The Proposed Action is categorically excluded from further
+            documentation under the National Environmental Policy Act (NEPA)
+            in accordance with:
+          </p>
+          {% for exclusion in exclusions %}
+          <p style="margin-top: 0.5em">{{ exclusion }}</p>
+          {% endfor %}
+        </li>
+        <li>
+          <h3>Extraordinary Circumstances Review:</h3>
+          <p>The proposed action will not:</p>
+          <ol>
+            <li>
+              <h4>
+                <strong>Have significant impacts on public health or
+                  safety.</strong>
+              </h4>
+              <p>Rationale:{{publicHealthImpacts}}</p>
+            </li>
+            <li>
+              <h4>
+                <strong>
+                  Have significant impacts on such natural resources and
+                  unique geographic characteristics as historic or cultural
+                  resources; park, recreation or refuge lands; wilderness
+                  areas; wild or scenic rivers; national natural landmarks;
+                  sole or principal drinking water aquifers; prime farmlands;
+                  wetlands; floodplains; national monuments; migratory birds;
+                  and other ecologically significant or critical areas.
+                </strong>
+              </h4>
+              <p>Rationale: {{naturalResourcesImpacts}}</p>
+            </li>
+            <li>
+              <h4>
+                <strong>
+                  Have highly uncertain and potentially significant
+                  environmental effects or involve unique or unknown
+                  environmental risks.
+                </strong>
+              </h4>
+              <p>Rationale: {{controversialEffects}}</p>
+            </li>
+            <li>
+              <h4>
+                <strong>
+                  Establish a precedent for future action or represent a
+                  decision in principle about future actions with potentially
+                  significant environmental effects.
+                </strong>
+              </h4>
+              <p>Rationale: {{precedentForFutureAction}}</p>
+            </li>
+            <li>
+              <h4>
+                <strong>
+                  Have a direct relationship to other actions that implicate
+                  potentially significant environmental effects.
+                </strong>
+              </h4>
+              <p>Rationale: {{cumulativeImpacts}}</p>
+            </li>
+            <li>
+              <h4>
+                <strong>
+                  Have significant impacts on properties listed, or eligible
+                  for listing, on the National Register of Historic Places as
+                  determined by the bureau.
+                </strong>
+              </h4>
+              <p>Rationale: {{historicProperties}}</p>
+            </li>
+            <li>
+              <h4>
+                <strong>
+                  Have significant impacts on species listed, or proposed to
+                  be listed, on the List of Endangered or Threatened Species,
+                  or have significant impacts on designated Critical Habitat
+                  for these species.
+                </strong>
+              </h4>
+              <p>Rationale: {{endangeredSpeciesImpacts}}</p>
+            </li>
+            <li>
+              <h4>
+                <strong>
+                  Significantly limit access to and ceremonial use of Indian
+                  sacred sites on Federal lands by Indian religious
+                  practitioners or significantly adversely affect the physical
+                  integrity of such sacred sites.
+                </strong>
+              </h4>
+              <p>Rationale: {{limitAccessToSacredSites}}</p>
+            </li>
+            <li>
+              <h4>
+                <strong>
+                  Contribute to potentially significant effects resulting from
+                  the introduction, continued existence, or spread of noxious
+                  weeds or non-native invasive species known to occur in the
+                  area or from other actions that promote the introduction,
+                  growth, or expansion of the range of such species (Federal
+                  Noxious Weed Control Act).
+                </strong>
+              </h4>
+              <p>Rationale: {{promoteNoxiousWeeds}}</p>
+            </li>
+          </ol>
+        </li>
+        <li>
+          <h3>Conclusion</h3>
+          <p>
+            This categorical exclusion is appropriate in this situation
+            because there are no extraordinary circumstances having effects
+            that significantly affect the environment. The proposed action has
+            been reviewed, and none of the extraordinary circumstances
+            described in 43 CFR Part 46.215 apply. I considered
+            {{categoricalExclusionJustification}}
+          </p>
+        </li>
+        <li>
+          <h3>Signature</h3>
+          <div aria-label="Signature area">________________________</div>
+        </li>
+      </ol>
+    </main>
+    <footer role="contentinfo">
+      <section class="mt-3">
+        <p>
+          <strong>Responsible Official:</strong> {{responsibleOfficial}}
+          <strong>Date:</strong> {{approvalDate}}
+        </p>
+      </section>
+      <section class="mt-3">
+        <h3 class="font-bold">Contact Person</h3>
+        <p>
+          For additional information concerning this CX review, please
+          contact:
+        </p>
+        <address>
+          {{contactPerson}}, {{contactTitle}}<br />
+          {{officeName}} {{mailingAddress}} {{telephoneNumber}}
+        </address>
+      </section>
+      {% if numberOfAttachments > 0 %}
+      <section class="mt-3">
+        <h3 class="font-bold">ATTACHMENTS:</h3>
+        <p>
+          {% if numberOfAttachments == 1 %} {{ numberOfAttachments }}
+          attachment is attached below. {% else %} {{ numberOfAttachments }}
+          attachments are attached below. {% endif %}
+        </p>
+      </section>
+      {% endif %}
+    </footer>
+  </div>
+</body>
+
 </html>
