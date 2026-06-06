@@ -191,7 +191,7 @@ class DirectArtifactPost:
         bucket = get_bucket_for_storage(storage)
 
         try:
-            s3_client.put_object(Bucket=bucket, Key=artifact_id, Body=pdf_stream)
+            s3_client.put_object(Bucket=bucket, Key=artifact_id, Body=pdf_stream, ContentType="application/pdf",)
         except Exception as e:
             logger.exception("Error uploading artifact to S3")
             resp.status = falcon.HTTP_500
