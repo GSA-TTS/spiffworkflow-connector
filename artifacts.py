@@ -298,7 +298,7 @@ class v1_do_artifacts_connector:
         attachments = template_data.get("attachments", [])
 
         # A hack until we have rich text capabilities
-        if ("\n" in template_data["locationOfProposedAction"]):
+        if "\n" in template_data["locationOfProposedAction"]:
             template_data["locationOfProposedActionMultiline"] = True
 
         # This is a total hack. The issue is that the user can enter any string,
