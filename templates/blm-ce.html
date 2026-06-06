@@ -10,30 +10,18 @@
 <body>
   <a href="#main-content" class="skip-link">Skip to main content</a>
   <div class="container mx-auto p-5">
+    <div class="w-15 flex-none absolute top-5 left-5">{% include "blm_logo.svg" %}</div>
     <div class="place-items-center">
-      <header role="banner" class="flex">
-        <div class="w-15 flex-none">{% include "blm_logo.svg" %}</div>
-        <div class="flex-1 ml-3">
-          <p class="agency__name uppercase">
-            United States Department of the Interior
-          </p>
-          <p class="agency__sub-name">Bureau of Land Management</p>
-        </div>
-      </header>
-      <section class="flex mt-2" aria-label="Document Information">
-        <address class="flex-1">
-          <ul class="list-none">
-            <li>{{fieldofficeName}}</li>
-            <li>{{streetAddress}}</li>
-            <li>{{city}}, {{zipCode}}</li>
-          </ul>
-        </address>
-        <div class="flex-1">
-          <ul class="list-none float-right">
-            <li>Categorical Exclusion</li>
-            <li>{{categoricalExclusionID}}</li>
-          </ul>
-        </div>
+      <section class="flex mt-2 text-center" aria-label="Document Information">
+        <ul class="list-none">
+          <li class="uppercase font-bold">United States Department of the Interior</li>
+          <li class="font-bold">Bureau of Land Management</li>
+          <li>{{fieldOfficeName}}</li>  
+          <li>{{streetAddress}}</li>
+          <li>{{city}}, {{zipCode}}</li>
+          <li class="uppercase font-bold">Categorical Exclusion</li>
+          <li>{{categoricalExclusionID}}</li>
+        </ul>
       </section>
     </div>
     <main role="main" id="main-content">
