@@ -300,7 +300,8 @@ class v1_do_artifacts_connector:
         # This is a total hack. The issue is that the user can enter any string,
         # so we are trying to format an arbitrary string.
         template_data["exclusions"] = template_data["exclusionsText"].split("\n")
-        template_data["lupDecisions"] = template_data["lupDecisions"].split("\n")
+        lupDecisions = template_data.get("landUsePlanDecisionText", "") or template_data.get("lupDecisions", "")
+        template_data["lupDecisions"] = lupDecisions.split("\n")
 
         template_data["responsibleOfficial"] = template_data["responsibleOfficial"]
         template_data["approvalDate"] = self._get_last_approval_date(template_data["approvers"])
