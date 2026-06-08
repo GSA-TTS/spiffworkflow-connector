@@ -138,7 +138,7 @@ class TestBLMSpecificFlows:
                 "applicant": "applicant_val",
                 "projectDescription": "projectDescription_val",
                 "landUsePlanName": "landUsePlanName_val",
-                "dateApproved": "dateApproved_val",
+                "landUsePlanDateApproved": "landUsePlanDateApproved_val",
                 "exclusionsText": "Fake exclusions",
                 "lupDecisions": "Fake LUP decisions",
                 "approvers": [
