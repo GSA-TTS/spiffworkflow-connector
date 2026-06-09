@@ -303,6 +303,8 @@ class v1_do_artifacts_connector:
         lupDecisions = template_data.get("landUsePlanDecisionText", "") or template_data.get("lupDecisions", "")
         template_data["lupDecisions"] = lupDecisions.split("\n")
 
+        template_data["landUsePlanDateApproved"] = template_data.get("dateApproved", "") or template_data.get("landUsePlanDateApproved", "")
+
         template_data["responsibleOfficial"] = template_data["responsibleOfficial"]
         template_data["approvalDate"] = self._get_last_approval_date(template_data["approvers"])
         # This assumes associated documents will be attachments
