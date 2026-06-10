@@ -1,4 +1,4 @@
-FROM python:3.12-slim-bookworm
+FROM python:3.14.5-slim-trixie@sha256:7a500125bc50693f2214e842a621440a1b1b9cbb2188f74ab045d29ed2ea5856
 
 COPY --from=ghcr.io/astral-sh/uv:0.8.21 /uv /uvx /bin/
 
@@ -11,6 +11,8 @@ RUN apt-get update && apt-get install -y curl && \
 
 ENV PATH="/root/.cargo/bin:$PATH"
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy dependency files
 COPY pyproject.toml uv.lock ./

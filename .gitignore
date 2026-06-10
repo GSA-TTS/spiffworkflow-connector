@@ -138,6 +138,9 @@ dmypy.json
 # VS Code
 .vscode
 
+# Custom CA certs (keep README only)
+certs/*.pem
+
 # Configs
 .mc
 .pki

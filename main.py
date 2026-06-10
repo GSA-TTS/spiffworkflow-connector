@@ -1,10 +1,17 @@
 import logging
+from io import BytesIO
 
 import falcon.asgi
+import falcon.media
 import httpx
 import orjson
 
-from artifacts import v1_do_artifacts_connector
+from artifacts import ASSOCIATED_DOCUMENTS_MAP, v1_do_artifacts_connector
+from s3utils import (
+    create_s3_client,
+    generate_presigned_url,
+    get_bucket_for_storage,
+)
 
 # TODO: change this for prod
 logging.basicConfig(level=logging.INFO)
@@ -44,7 +51,7 @@ class v1_do_http_connector:
         if basic_auth_username and basic_auth_password:
             auth = (basic_auth_username, basic_auth_password)
 
-        # TODO: error handling
+        # TODO: add better error handling
         http_response = await http_client.request(
             self.request_method,
             url,
@@ -78,8 +85,6 @@ class v1_do_http_connector:
 #
 # App
 #
-
-
 extra_handlers = {
     "application/json": falcon.media.JSONHandler(
         dumps=orjson.dumps,
@@ -90,6 +95,125 @@ extra_handlers = {
 app = falcon.asgi.App(
     cors_enable=True,
 )
+
+
+## ASTRO / DIRECT ROUTES
+class DirectArtifactLink:
+    async def on_get(self, req: falcon.asgi.Request, resp: falcon.asgi.Response, artifact_id):
+        import urllib.parse
+
+        artifact_id = urllib.parse.unquote(artifact_id)
+        s3_client = create_s3_client(None)
+        bucket = get_bucket_for_storage(None)
+        try:
+            s3_client.head_object(Bucket=bucket, Key=artifact_id)
+        except s3_client.exceptions.NoSuchKey:
+            resp.status = falcon.HTTP_404
+            resp.media = {
+                "error": "not_found",
+                "detail": f"Artifact '{artifact_id}' not found",
+            }
+            return
+        except Exception as e:
+            logger.exception("Error checking artifact existence")
+            resp.status = falcon.HTTP_500
+            resp.media = {"error": "s3_error", "detail": str(e)}
+            return
+
+        try:
+            url = generate_presigned_url(s3_client, bucket, artifact_id)
+        except Exception as e:
+            logger.exception("Error generating presigned URL")
+            resp.status = falcon.HTTP_500
+            resp.media = {"error": "presign_failed", "detail": str(e)}
+            return
+
+        resp.status = falcon.HTTP_200
+        resp.media = {"url": url}
+
+
+# artifact_id shape: {projectId}/{processId}/{artifactId}
+app.add_route("/api/artifacts/{artifact_id:path}", DirectArtifactLink())
+
+
+class DirectArtifactPost:
+    async def on_post(self, req: falcon.asgi.Request, resp: falcon.asgi.Response):
+        try:
+            params = await req.media
+        except Exception as e:
+            resp.status = falcon.HTTP_400
+            resp.media = {"error": "invalid_request", "detail": str(e)}
+            return
+
+        artifact_id = params.get("id")
+        template_name = params.get("template")
+        template_data = params.get("data")
+        generate_links = params.get("generate_links", False)
+        storage = params.get("storage", None)
+
+        if not artifact_id or not template_name or not template_data:
+            resp.status = falcon.HTTP_400
+            resp.media = {
+                "error": "missing_params",
+                "detail": "id, template, and data are required",
+            }
+            return
+
+        attachments = template_data.get("attachments", [])
+
+        try:
+            template_data = artifacts._format_template_data(template_name, template_data, [])
+            rendered_document = artifacts._render_template_html(template_name, template_data)
+        except Exception as e:
+            logger.exception("Error rendering template")
+            resp.status = falcon.HTTP_500
+            resp.media = {"error": "template_error", "detail": str(e)}
+            return
+
+        associated_documents: list[str] = []
+        for associated_document_template in ASSOCIATED_DOCUMENTS_MAP.get(template_name, []):
+            associated_documents.append(artifacts._render_template_html(associated_document_template, template_data))
+
+        try:
+            pdf_buffer = await artifacts._generate_pdf_with_attachments(
+                rendered_document, associated_documents, attachments
+            )
+        except Exception as e:
+            logger.exception("Error generating PDF")
+            resp.status = falcon.HTTP_500
+            resp.media = {"error": "pdf_generation_failed", "detail": str(e)}
+            return
+
+        pdf_stream = BytesIO(pdf_buffer)
+        pdf_stream.seek(0)
+
+        s3_client = create_s3_client(storage)
+        bucket = get_bucket_for_storage(storage)
+
+        try:
+            s3_client.put_object(Bucket=bucket, Key=artifact_id, Body=pdf_stream)
+        except Exception as e:
+            logger.exception("Error uploading artifact to S3")
+            resp.status = falcon.HTTP_500
+            resp.media = {"error": "upload_failed", "detail": str(e)}
+            return
+
+        try:
+            response = artifacts._generate_artifact_response(s3_client, bucket, artifact_id, generate_links)
+        except Exception as e:
+            logger.exception("Error generating artifact response links")
+            resp.status = falcon.HTTP_500
+            resp.media = {"error": "response_generation_failed", "detail": str(e)}
+            return
+
+        resp.status = falcon.HTTP_200
+        resp.media = response
+
+
+app.add_route("/api/artifacts/GenerateArtifact", DirectArtifactPost())
+
+
+## SPIFF ROUTES
 
 app.req_options.media_handlers.update(extra_handlers)
 app.resp_options.media_handlers.update(extra_handlers)
@@ -106,12 +230,8 @@ app.add_route("/v1/do/http/PutRequest", v1_do_http_connector("PUT"))
 
 # Add new artifact routes
 artifacts = v1_do_artifacts_connector()
-app.add_route(
-    "/v1/do/artifacts/GenerateArtifact", artifacts, suffix="generate_artifact"
-)
-app.add_route(
-    "/v1/do/artifacts/GenerateHtmlPreview", artifacts, suffix="generate_html_preview"
-)
+app.add_route("/v1/do/artifacts/GenerateArtifact", artifacts, suffix="generate_artifact")
+app.add_route("/v1/do/artifacts/GenerateHtmlPreview", artifacts, suffix="generate_html_preview")
 app.add_route("/v1/do/artifacts/GetLinkToArtifact", artifacts, suffix="get_link")
 
 #
