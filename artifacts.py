@@ -297,6 +297,13 @@ class v1_do_artifacts_connector:
 
         attachments = template_data.get("attachments", [])
 
+        projectLocation = template_data.get("projectLocation", "") or template_data.get("locationOfProposedAction", "")
+        template_data["projectLocation"] = projectLocation
+
+        # A hack until we have rich text capabilities
+        if "\n" in projectLocation:
+            template_data["locationOfProposedActionMultiline"] = True
+
         # This is a total hack. The issue is that the user can enter any string,
         # so we are trying to format an arbitrary string.
         template_data["exclusions"] = template_data["exclusionsText"].split("\n")

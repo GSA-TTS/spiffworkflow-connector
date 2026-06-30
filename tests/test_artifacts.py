@@ -129,7 +129,7 @@ class TestBLMSpecificFlows:
             "data": {
                 "projectTitle": "projectTitle_val",
                 "categoricalExclusionID": "categoricalExclusionID_val",
-                "fieldofficeName": "fieldofficeName_val",
+                "fieldOfficeName": "fieldOfficeName_val",
                 "streetAddress": "streetAddress_val",
                 "city": "city_val",
                 "zipCode": "zipCode_val",
