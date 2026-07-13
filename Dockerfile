@@ -2,6 +2,13 @@ FROM python:3.14.5-slim-trixie@sha256:7a500125bc50693f2214e842a621440a1b1b9cbb21
 
 COPY --from=ghcr.io/astral-sh/uv:0.8.21 /uv /uvx /bin/
 
+# Trust a corporate TLS-inspecting proxy CA (e.g. Zscaler) during the build, if
+# one is supplied as a BuildKit secret. No-op off-proxy / in CI: when the secret
+# is absent the mount is empty and this line does nothing.
+# Supply with:  docker build --secret id=zscaler_ca,src=/path/to/ca-bundle.crt ...
+RUN --mount=type=secret,id=zscaler_ca,dst=/usr/local/share/ca-certificates/zscaler-shim.crt \
+    (command -v update-ca-certificates >/dev/null && update-ca-certificates || true)
+
 WORKDIR /app
 
 # Install system dependencies and uv

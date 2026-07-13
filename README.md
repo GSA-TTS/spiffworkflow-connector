@@ -88,6 +88,38 @@ curl -X POST \
 
 To develop and test this repository, you can run `make` in a shell, which will build and start the local Docker network, including a Minio instance for storage. Running `make test` will run a test script for existing functionality.
 
+### Building behind a TLS-inspecting proxy (e.g. Zscaler)
+
+On a machine whose egress is intercepted by a TLS-inspecting proxy (Zscaler,
+Netskope, etc.), Docker builds fail with `x509: certificate signed by unknown
+authority` because the build's `RUN` steps (`apt-get`, `curl https://astral.sh`,
+`uv sync`, `playwright install`) don't trust the proxy's re-signing CA.
+
+The `Dockerfile` accepts the corporate CA as an optional BuildKit **secret**
+named `zscaler_ca`. Pass your CA bundle at build time and BuildKit will trust it
+for the rest of the build:
+
+```bash
+docker buildx build \
+  --secret id=zscaler_ca,src=/path/to/ca-bundle.crt \
+  --build-arg HTTPS_PROXY="$HTTPS_PROXY" \
+  --build-arg HTTP_PROXY="$HTTP_PROXY" \
+  --build-arg NO_PROXY="$NO_PROXY" \
+  -t spiffworkflow-connector .
+```
+
+The CA bundle is typically the concatenation of your proxy's root/intermediate
+certs (on Linux these live under `/usr/local/share/ca-certificates/*.crt`).
+
+This is a **no-op off-proxy and in CI**: when the secret is not supplied the
+mount is empty and the line does nothing, so the same `Dockerfile` stays
+portable.
+
+> BuildKit itself must also trust the CA to pull the base images (`FROM`,
+> `COPY --from=ghcr.io/...`). Use a `buildx` builder whose BuildKit image trusts
+> the CA. A reusable helper that wires up both boundaries automatically is
+> available as `docker-zscaler-shim`.
+
 ## **Tests**
 
 To run pytest unit tests, either exec into the connector service container and run:
