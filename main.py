@@ -23,7 +23,6 @@ http_client = httpx.AsyncClient(timeout=None)
 # Controllers
 #
 
-
 class liveness:
     async def on_get(self, req, resp):
         resp.media = {"status": "ok"}
@@ -151,6 +150,8 @@ class DirectArtifactPost:
         generate_links = params.get("generate_links", False)
         storage = params.get("storage", None)
 
+        logger.error(f"{template_data}")
+
         if not artifact_id or not template_name or not template_data:
             resp.status = falcon.HTTP_400
             resp.media = {
@@ -162,7 +163,7 @@ class DirectArtifactPost:
         attachments = template_data.get("attachments", [])
 
         try:
-            template_data = artifacts._format_template_data(template_name, template_data, [])
+            # template_data = artifacts._format_template_data(template_name, template_data, [])
             rendered_document = artifacts._render_template_html(template_name, template_data)
         except Exception as e:
             logger.exception("Error rendering template")

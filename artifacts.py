@@ -8,7 +8,7 @@ from functools import wraps
 from io import BytesIO
 from typing import Any
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, select_autoescape
 from playwright.async_api import Browser, async_playwright
 from pypdf import PdfReader, PdfWriter
 
@@ -17,6 +17,13 @@ from s3utils import (
     generate_presigned_url,
     generate_private_link,
     get_bucket_for_storage,
+)
+
+jinja = Environment(
+    autoescape=select_autoescape(
+        enabled_extensions=("html", "htm", "xml"),
+        default_for_string=True,
+    ),
 )
 
 logger = logging.getLogger(__name__)
@@ -69,7 +76,6 @@ def check_required_parameters(required_params: list[str], params: dict[str, Any]
 class v1_do_artifacts_connector:
     def __init__(self):
         self.template_path = os.path.abspath("./templates")
-        self.env = Environment(loader=FileSystemLoader(self.template_path))
 
     @command_handler("Error generating HTML Preview")
     async def on_post_generate_html_preview(self, req, resp):
@@ -162,10 +168,9 @@ class v1_do_artifacts_connector:
         status = 200
         return response, status
 
-    def _render_template_html(self, template_name, template_data) -> str:
-        # Transform the data for rendering in the template
-        template = self.env.get_template(template_name)
-        return template.render(template_data)
+    def _render_template_html(self, template, data) -> str:
+        template = jinja.from_string(template)
+        return template.render(**data)
 
     def _get_last_approval_date(self, approvers: list[dict[str, Any]]):
         return approvers[-1]["date"]
