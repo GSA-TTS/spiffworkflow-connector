@@ -8,7 +8,7 @@ from functools import wraps
 from io import BytesIO
 from typing import Any
 
-from jinja2 import Environment, select_autoescape
+from jinja2 import Environment, select_autoescape, FileSystemLoader
 from playwright.async_api import Browser, async_playwright
 from pypdf import PdfReader, PdfWriter
 
@@ -76,6 +76,8 @@ def check_required_parameters(required_params: list[str], params: dict[str, Any]
 class v1_do_artifacts_connector:
     def __init__(self):
         self.template_path = os.path.abspath("./templates")
+        self.env = Environment(loader=FileSystemLoader(self.template_path))
+
 
     @command_handler("Error generating HTML Preview")
     async def on_post_generate_html_preview(self, req, resp):
