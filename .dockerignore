@@ -1,0 +1,17 @@
+.venv
+venv
+env
+ENV
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.git
+.github
+certs/*.pem
+minio_data
+.mc
+.pki
+*.log
+.DS_Store
