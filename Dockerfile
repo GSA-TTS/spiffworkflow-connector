@@ -1,4 +1,4 @@
-FROM python:3.14.5-slim-trixie@sha256:7a500125bc50693f2214e842a621440a1b1b9cbb2188f74ab045d29ed2ea5856
+FROM python:3.13-slim-bookworm@sha256:00faa2debb87529f9f0764e9491d8ba400a3678976616c3bd7cb193745ac20d1
 
 COPY --from=ghcr.io/astral-sh/uv:0.8.21 /uv /uvx /bin/
 
@@ -7,7 +7,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.8.21 /uv /uvx /bin/
 # is absent the mount is empty and this line does nothing.
 # Supply with:  docker build --secret id=zscaler_ca,src=/path/to/ca-bundle.crt ...
 RUN --mount=type=secret,id=zscaler_ca,dst=/usr/local/share/ca-certificates/zscaler-shim.crt \
-    (command -v update-ca-certificates >/dev/null && update-ca-certificates || true)
+  (command -v update-ca-certificates >/dev/null && update-ca-certificates || true)
 
 WORKDIR /app
 

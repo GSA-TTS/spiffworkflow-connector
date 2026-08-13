@@ -140,6 +140,7 @@ dmypy.json
 
 # Custom CA certs (keep README only)
 certs/*.pem
+certs/*.crt
 
 # Configs
 .mc
