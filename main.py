@@ -97,6 +97,7 @@ app = falcon.asgi.App(
     cors_enable=True,
 )
 
+logger.info("CONNECTOR_LOG Loading ParseArtifactPost module")
 
 ## ASTRO / DIRECT ROUTES
 class DirectArtifactLink:
@@ -223,6 +224,12 @@ class ParseArtifactPost:
         req: falcon.asgi.Request,
         resp: falcon.asgi.Response,
     ):
+        logger.info(
+            "CONNECTOR_LOG ParseArtifactPost.on_post called: method=%s path=%s content_type=%s",
+            req.method,
+            req.path,
+            req.content_type,
+        )
         form = await req.get_media()
         file_part = await form.get("file")
 
@@ -242,7 +249,19 @@ class ParseArtifactPost:
 
 
 app.add_route("/api/artifacts/GenerateArtifact", DirectArtifactPost())
-app.add_route("/api/artifacts/ParseArtifact", ParseArtifactPost())
+parse_artifact_resource = ParseArtifactPost()
+
+logger.info(
+    "CONNECTOR_LOG Registering ParseArtifact route: resource=%s on_post=%s on_get=%s",
+    type(parse_artifact_resource).__name__,
+    getattr(parse_artifact_resource, "on_post", None),
+    getattr(parse_artifact_resource, "on_get", None),
+)
+
+app.add_route(
+    "/api/artifacts/ParseArtifact",
+    parse_artifact_resource,
+)
 
 
 ## SPIFF ROUTES
