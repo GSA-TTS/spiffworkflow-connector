@@ -1,8 +1,7 @@
 from io import BytesIO
 from zipfile import ZipFile
 
-from lxml import etree
-
+import lxml.etree as etree
 
 NS = {
     "w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
