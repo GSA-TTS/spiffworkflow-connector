@@ -6,6 +6,7 @@ import falcon.media
 import httpx
 import orjson
 
+from extract_field_controls import DocxFieldExtractor
 from artifacts import ASSOCIATED_DOCUMENTS_MAP, v1_do_artifacts_connector
 from s3utils import (
     create_s3_client,
@@ -215,7 +216,33 @@ class DirectArtifactPost:
         resp.media = response
 
 
+class ParseArtifactPost:
+
+    async def on_post(
+        self,
+        req: falcon.asgi.Request,
+        resp: falcon.asgi.Response,
+    ):
+        form = await req.get_media()
+        file_part = await form.get("file")
+
+        if file_part is None:
+            raise falcon.HTTPBadRequest(
+                title="Missing file",
+                description="A file is required.",
+            )
+
+        logger.exception("HERE!!!")
+        file_bytes = await file_part.stream.read()
+        file_extractor = DocxFieldExtractor()
+        file_dict = file_extractor.extract_fields(file_bytes)
+        resp.media = {
+            "fields": file_dict,
+        }
+
+
 app.add_route("/api/artifacts/GenerateArtifact", DirectArtifactPost())
+app.add_route("/api/artifacts/ParseArtifact", ParseArtifactPost())
 
 
 ## SPIFF ROUTES

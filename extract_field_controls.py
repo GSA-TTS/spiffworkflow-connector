@@ -1,5 +1,8 @@
+from io import BytesIO
 from zipfile import ZipFile
+
 from lxml import etree
+
 
 NS = {
     "w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
@@ -7,8 +10,13 @@ NS = {
 
 
 class DocxFieldExtractor:
+
     def _get_w_val(self, element, attr="val"):
-        return element.get(f"{{{NS['w']}}}{attr}") if element is not None else None
+        return (
+            element.get(f"{{{NS['w']}}}{attr}")
+            if element is not None
+            else None
+        )
 
     def _get_text_from_element(self, element):
         texts = element.xpath(".//w:t/text()", namespaces=NS)
@@ -26,10 +34,10 @@ class DocxFieldExtractor:
 
         return fields
 
-    def _extract_content_controls(self, docx_path):
+    def _extract_content_controls(self, docx_bytes: bytes):
         controls = []
 
-        with ZipFile(docx_path) as docx:
+        with ZipFile(BytesIO(docx_bytes)) as docx:
             xml = docx.read("word/document.xml")
 
         root = etree.fromstring(xml)
@@ -56,8 +64,6 @@ class DocxFieldExtractor:
 
         return controls
 
-    async def on_post_extract_content(self, req, resp):
-        controls = self._extract_content_controls("example.docx")
-        fields = self._content_controls_to_dict(controls)
-
-        print(fields)
+    def extract_fields(self, docx_bytes: bytes):
+        controls = self._extract_content_controls(docx_bytes)
+        return self._content_controls_to_dict(controls)
