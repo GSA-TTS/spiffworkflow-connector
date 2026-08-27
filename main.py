@@ -224,14 +224,14 @@ class ParseArtifactPost:
         req: falcon.asgi.Request,
         resp: falcon.asgi.Response,
     ):
-        logger.info(
-            "CONNECTOR_LOG ParseArtifactPost.on_post called: method=%s path=%s content_type=%s",
-            req.method,
-            req.path,
-            req.content_type,
-        )
         form = await req.get_media()
-        file_part = await form.get("file")
+
+        file_part = None
+
+        async for part in form:
+            if part.name == "file":
+                file_part = part
+                break
 
         if file_part is None:
             raise falcon.HTTPBadRequest(
@@ -239,10 +239,11 @@ class ParseArtifactPost:
                 description="A file is required.",
             )
 
-        logger.exception("HERE!!!")
         file_bytes = await file_part.stream.read()
+
         file_extractor = DocxFieldExtractor()
         file_dict = file_extractor.extract_fields(file_bytes)
+
         resp.media = {
             "fields": file_dict,
         }
