@@ -17,8 +17,14 @@ def extractor():
 
 
 @pytest.fixture
-def controls(extractor):
-    return extractor._extract_content_controls(FIXTURE_PATH)
+def docx_bytes():
+    with open(FIXTURE_PATH, "rb") as file:
+        return file.read()
+
+
+@pytest.fixture
+def controls(extractor, docx_bytes):
+    return extractor._extract_content_controls(docx_bytes)
 
 
 @pytest.fixture
@@ -50,6 +56,7 @@ class TestDocxFieldExtractor:
             "grantIDAttachment1",
             "ceEligibility",
         }
+
         assert expected_keys.issubset(fields.keys())
 
     def test_checkbox_fields_extracted(self, fields):
@@ -70,12 +77,18 @@ class TestDocxFieldExtractor:
             {"tag": None, "alias": "aliasOnly", "id": "456", "value": "v2"},
             {"tag": None, "alias": None, "id": "789", "value": "v3"},
         ]
+
         result = extractor._content_controls_to_dict(controls)
+
         assert result["myTag"] == "v"
         assert result["aliasOnly"] == "v2"
         assert result["789"] == "v3"
 
     def test_dict_skips_controls_without_key(self, extractor):
-        controls = [{"tag": None, "alias": None, "id": None, "value": "orphan"}]
+        controls = [
+            {"tag": None, "alias": None, "id": None, "value": "orphan"},
+        ]
+
         result = extractor._content_controls_to_dict(controls)
+
         assert result == {}
