@@ -6,8 +6,8 @@ import falcon.media
 import httpx
 import orjson
 
-from extract_field_controls import DocxFieldExtractor
 from artifacts import ASSOCIATED_DOCUMENTS_MAP, v1_do_artifacts_connector
+from extract_field_controls import DocxFieldExtractor
 from s3utils import (
     create_s3_client,
     generate_presigned_url,
