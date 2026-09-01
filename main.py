@@ -239,12 +239,19 @@ class ParseArtifactPost:
 
         file_bytes = await file_part.stream.read()
 
-        file_extractor = DocxFieldExtractor()
-        file_dict = file_extractor.extract_fields(file_bytes)
+        try:
+            file_extractor = DocxFieldExtractor()
+            file_dict = file_extractor.extract_fields(file_bytes)
 
-        resp.media = {
-            "fields": file_dict,
-        }
+            resp.media = {
+                "fields": file_dict,
+            }
+            return
+        except Exception as e:
+            logger.exception(f"Error parsing artifact: {str(e)}")
+            resp.status = falcon.HTTP_500
+            resp.media = {"error": "artifact_parse_failed", "detail": str(e)}
+            return
 
 
 app.add_route("/api/artifacts/GenerateArtifact", DirectArtifactPost())
