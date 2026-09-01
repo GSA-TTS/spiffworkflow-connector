@@ -9,13 +9,8 @@ NS = {
 
 
 class DocxFieldExtractor:
-
     def _get_w_val(self, element, attr="val"):
-        return (
-            element.get(f"{{{NS['w']}}}{attr}")
-            if element is not None
-            else None
-        )
+        return element.get(f"{{{NS['w']}}}{attr}") if element is not None else None
 
     def _get_text_from_element(self, element):
         texts = element.xpath(".//w:t/text()", namespaces=NS)

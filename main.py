@@ -217,7 +217,6 @@ class DirectArtifactPost:
 
 
 class ParseArtifactPost:
-
     async def on_post(
         self,
         req: falcon.asgi.Request,

@@ -62,9 +62,7 @@ class TestDocxFieldExtractor:
         assert fields["signatureDate"] == "Click or tap to enter a date."
 
     def test_long_text_field_content(self, fields):
-        assert fields["ceEligibility"].startswith(
-            "The EPA finds that the proposed action is eligible for exclusion"
-        )
+        assert fields["ceEligibility"].startswith("The EPA finds that the proposed action is eligible for exclusion")
 
     def test_dict_keys_prefer_tag_over_alias_and_id(self, extractor):
         controls = [
