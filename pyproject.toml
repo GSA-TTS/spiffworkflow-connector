@@ -10,6 +10,7 @@ dependencies = [
     "granian>=2.5.4",
     "httpx>=0.28.1",
     "jinja2>=3.1.6",
+    "lxml>=6.1.1",
     "minio>=7.2.18",
     "orjson>=3.11.3",
     "playwright>=1.55.0",
