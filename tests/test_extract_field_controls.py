@@ -84,7 +84,7 @@ class TestDocxFieldExtractor:
         assert result["aliasOnly"] == "v2"
         assert result["789"] == "v3"
 
-    def test_dict_skips_controls_without_key(self, extractor):
+    def test_dict_skips_unidentified_controls(self, extractor):
         controls = [
             {"tag": None, "alias": None, "id": None, "value": "orphan"},
         ]
