@@ -5,9 +5,11 @@ import falcon.asgi
 import falcon.media
 import httpx
 import orjson
+import json
 
 from artifacts import ASSOCIATED_DOCUMENTS_MAP, v1_do_artifacts_connector
 from docx.extract_field_controls import DocxFieldExtractor
+from docx.fill_field_controls import DocxFieldPopulator
 from s3utils import (
     create_s3_client,
     generate_presigned_url,
@@ -254,12 +256,105 @@ class ParseArtifactPost:
             return
 
 
+class GenerateDocumentPost:
+    async def on_post(
+        self,
+        req: falcon.asgi.Request,
+        resp: falcon.asgi.Response,
+    ):
+        document_id = None
+        template_bytes = None
+        template_data = None
+        storage = None
+
+        try:
+            form = await req.get_media()
+
+            async for part in form:
+                if part.name == "id":
+                    document_id = await part.text
+
+                elif part.name == "template":
+                    # Read the stream immediately while we're on this part.
+                    template_bytes = await part.stream.read()
+
+                elif part.name == "data":
+                    template_data = json.loads(await part.text)
+
+                elif part.name == "storage":
+                    storage = await part.text
+
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            resp.status = falcon.HTTP_400
+            resp.media = {
+                "error": "invalid_request",
+                "detail": str(e),
+            }
+            return
+
+        if not document_id or template_bytes is None or template_data is None:
+            resp.status = falcon.HTTP_400
+            resp.media = {
+                "error": "missing_params",
+                "detail": "id, template, and data are required",
+            }
+            return
+
+        try:
+            file_populator = DocxFieldPopulator()
+
+            populated_file = file_populator.populate_fields(
+                template_bytes,
+                template_data,
+            )
+
+        except Exception as e:
+            logger.exception(f"Error populating artifact: {str(e)}")
+
+            resp.status = falcon.HTTP_500
+            resp.media = {
+                "error": "artifact_population_failed",
+                "detail": str(e),
+            }
+            return
+
+        try:
+            s3_client = create_s3_client(storage)
+            bucket = get_bucket_for_storage(storage)
+
+            s3_client.put_object(
+                Bucket=bucket,
+                Key=document_id,
+                Body=populated_file,
+                ContentType=(
+                    "application/vnd.openxmlformats-officedocument."
+                    "wordprocessingml.document"
+                ),
+            )
+
+        except Exception as e:
+            logger.exception("Error uploading artifact to S3")
+
+            resp.status = falcon.HTTP_500
+            resp.media = {
+                "error": "upload_failed",
+                "detail": str(e),
+            }
+            return
+
+        resp.status = falcon.HTTP_200
+        resp.media = {}
+
 app.add_route("/api/artifacts/GenerateArtifact", DirectArtifactPost())
-parse_artifact_resource = ParseArtifactPost()
 
 app.add_route(
     "/api/artifacts/ParseArtifact",
-    parse_artifact_resource,
+    ParseArtifactPost(),
+)
+
+app.add_route(
+    "/api/artifacts/GenerateDocument",
+    GenerateDocumentPost(),
 )
 
 
