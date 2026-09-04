@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from extract_field_controls import DocxFieldExtractor
+from docx.extract_field_controls import DocxFieldExtractor
 
 FIXTURE_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
