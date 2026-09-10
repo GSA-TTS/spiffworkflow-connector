@@ -277,8 +277,8 @@ class GenerateDocumentPost:
                     document_id = await part.text
 
                 elif part.name == "template":
-                    # Read the stream immediately while we're on this part.
                     template_bytes = await part.stream.read()
+                    template_content_type = part.content_type
 
                 elif part.name == "data":
                     template_data = json.loads(await part.text)
@@ -328,7 +328,7 @@ class GenerateDocumentPost:
                 Bucket=bucket,
                 Key=document_id,
                 Body=populated_file,
-                ContentType=("application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+                ContentType=(template_content_type),
             )
 
         except Exception as e:
