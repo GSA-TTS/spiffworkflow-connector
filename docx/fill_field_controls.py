@@ -3,7 +3,6 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 import lxml.etree as etree
 
-
 NS = {
     "w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
 }
@@ -18,11 +17,7 @@ class DocxFieldPopulator:
         alias_el = sdt_pr.find("w:alias", namespaces=NS)
         id_el = sdt_pr.find("w:id", namespaces=NS)
 
-        return (
-            self._get_w_val(tag_el)
-            or self._get_w_val(alias_el)
-            or self._get_w_val(id_el)
-        )
+        return self._get_w_val(tag_el) or self._get_w_val(alias_el) or self._get_w_val(id_el)
 
     def _set_content_control_value(self, sdt_content, value):
         text_elements = sdt_content.xpath(".//w:t", namespaces=NS)

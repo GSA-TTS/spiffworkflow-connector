@@ -1,3 +1,4 @@
+import json
 import logging
 from io import BytesIO
 
@@ -5,7 +6,6 @@ import falcon.asgi
 import falcon.media
 import httpx
 import orjson
-import json
 
 from artifacts import ASSOCIATED_DOCUMENTS_MAP, v1_do_artifacts_connector
 from docx.extract_field_controls import DocxFieldExtractor
@@ -326,10 +326,7 @@ class GenerateDocumentPost:
                 Bucket=bucket,
                 Key=document_id,
                 Body=populated_file,
-                ContentType=(
-                    "application/vnd.openxmlformats-officedocument."
-                    "wordprocessingml.document"
-                ),
+                ContentType=("application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
             )
 
         except Exception as e:
@@ -344,6 +341,7 @@ class GenerateDocumentPost:
 
         resp.status = falcon.HTTP_200
         resp.media = {}
+
 
 app.add_route("/api/artifacts/GenerateArtifact", DirectArtifactPost())
 
