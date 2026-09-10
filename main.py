@@ -256,6 +256,8 @@ class ParseArtifactPost:
             return
 
 
+# This is a v2 version of DirectArtifactPost, where the template is stored elsewhere
+# and passed in, rather than the template being stored here
 class GenerateDocumentPost:
     async def on_post(
         self,
