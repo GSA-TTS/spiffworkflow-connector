@@ -332,10 +332,6 @@ class GenerateDocumentPost:
             s3_client = create_s3_client(storage)
             bucket = get_bucket_for_storage(storage)
 
-            logger.exception("HERE!!!")
-            logger.exception(template_content_type)
-            logger.exception(type(template_content_type))
-
             s3_client.put_object(
                 Bucket=bucket,
                 Key=document_id,
