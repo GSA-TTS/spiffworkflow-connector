@@ -269,6 +269,7 @@ class GenerateDocumentPost:
         template_bytes = None
         template_data: dict[str, Any] | None = None
         storage: str | None = None
+        template_content_type: str | None = None
 
         try:
             form = await req.get_media()
