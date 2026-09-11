@@ -1,6 +1,7 @@
 import json
 import logging
 from io import BytesIO
+from typing import Any
 
 import falcon.asgi
 import falcon.media
@@ -8,8 +9,7 @@ import httpx
 import orjson
 
 from artifacts import ASSOCIATED_DOCUMENTS_MAP, v1_do_artifacts_connector
-from docx.extract_field_controls import DocxFieldExtractor
-from docx.fill_field_controls import DocxFieldPopulator
+from document_parsing.get_document_parser import get_document_parser
 from s3utils import (
     create_s3_client,
     generate_presigned_url,
@@ -239,11 +239,12 @@ class ParseArtifactPost:
                 description="A file is required.",
             )
 
+        content_type = file_part.content_type
         file_bytes = await file_part.stream.read()
 
         try:
-            file_extractor = DocxFieldExtractor()
-            file_dict = file_extractor.extract_fields(file_bytes)
+            file_extractor = get_document_parser(file_bytes, content_type)
+            file_dict = file_extractor.extract_data()
 
             resp.media = {
                 "fields": file_dict,
@@ -264,10 +265,10 @@ class GenerateDocumentPost:
         req: falcon.asgi.Request,
         resp: falcon.asgi.Response,
     ):
-        document_id = None
+        document_id: str | None = None
         template_bytes = None
-        template_data = None
-        storage = None
+        template_data: dict[str, Any] | None = None
+        storage: str | None = None
 
         try:
             form = await req.get_media()
@@ -302,11 +303,18 @@ class GenerateDocumentPost:
             }
             return
 
-        try:
-            file_populator = DocxFieldPopulator()
+        if not template_content_type:
+            resp.status = falcon.HTTP_400
+            resp.media = {
+                "error": "missing_params",
+                "detail": "template is missing the MIME content type",
+            }
+            return
 
-            populated_file = file_populator.populate_fields(
-                template_bytes,
+        try:
+            file_populator = get_document_parser(template_bytes, template_content_type)
+
+            populated_file = file_populator.populate_document(
                 template_data,
             )
 
@@ -324,11 +332,15 @@ class GenerateDocumentPost:
             s3_client = create_s3_client(storage)
             bucket = get_bucket_for_storage(storage)
 
+            logger.exception("HERE!!!")
+            logger.exception(template_content_type)
+            logger.exception(type(template_content_type))
+
             s3_client.put_object(
                 Bucket=bucket,
                 Key=document_id,
                 Body=populated_file,
-                ContentType=(template_content_type),
+                ContentType=template_content_type,
             )
 
         except Exception as e:
