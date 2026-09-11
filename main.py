@@ -243,8 +243,8 @@ class ParseArtifactPost:
         file_bytes = await file_part.stream.read()
 
         try:
-            file_extractor = get_document_parser(file_bytes, content_type)
-            file_dict = file_extractor.extract_data()
+            document_parser = get_document_parser(file_bytes, content_type)
+            file_dict = document_parser.extract_data()
 
             resp.media = {
                 "fields": file_dict,
@@ -312,9 +312,9 @@ class GenerateDocumentPost:
             return
 
         try:
-            file_populator = get_document_parser(template_bytes, template_content_type)
+            document_parser = get_document_parser(template_bytes, template_content_type)
 
-            populated_file = file_populator.populate_document(
+            populated_file = document_parser.populate_document(
                 template_data,
             )
 
