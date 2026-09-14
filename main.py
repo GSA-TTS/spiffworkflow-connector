@@ -1,5 +1,7 @@
+import json
 import logging
 from io import BytesIO
+from typing import Any
 
 import falcon.asgi
 import falcon.media
@@ -7,7 +9,7 @@ import httpx
 import orjson
 
 from artifacts import ASSOCIATED_DOCUMENTS_MAP, v1_do_artifacts_connector
-from extract_field_controls import DocxFieldExtractor
+from document_parsing.get_document_parser import get_document_parser
 from s3utils import (
     create_s3_client,
     generate_presigned_url,
@@ -237,11 +239,12 @@ class ParseArtifactPost:
                 description="A file is required.",
             )
 
+        content_type = file_part.content_type
         file_bytes = await file_part.stream.read()
 
         try:
-            file_extractor = DocxFieldExtractor()
-            file_dict = file_extractor.extract_fields(file_bytes)
+            document_parser = get_document_parser(file_bytes, content_type)
+            file_dict = document_parser.extract_data()
 
             resp.media = {
                 "fields": file_dict,
@@ -254,12 +257,113 @@ class ParseArtifactPost:
             return
 
 
+# This is a v2 version of DirectArtifactPost, where the template is stored elsewhere
+# and passed in, rather than the template being stored here
+class GenerateDocumentPost:
+    async def on_post(
+        self,
+        req: falcon.asgi.Request,
+        resp: falcon.asgi.Response,
+    ):
+        document_id: str | None = None
+        template_bytes = None
+        template_data: dict[str, Any] | None = None
+        storage: str | None = None
+        template_content_type: str | None = None
+
+        try:
+            form = await req.get_media()
+
+            async for part in form:
+                if part.name == "id":
+                    document_id = await part.text
+
+                elif part.name == "template":
+                    template_bytes = await part.stream.read()
+                    template_content_type = part.content_type
+
+                elif part.name == "data":
+                    template_data = json.loads(await part.text)
+
+                elif part.name == "storage":
+                    storage = await part.text
+
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            resp.status = falcon.HTTP_400
+            resp.media = {
+                "error": "invalid_request",
+                "detail": str(e),
+            }
+            return
+
+        if not document_id or template_bytes is None or template_data is None:
+            resp.status = falcon.HTTP_400
+            resp.media = {
+                "error": "missing_params",
+                "detail": "id, template, and data are required",
+            }
+            return
+
+        if not template_content_type:
+            resp.status = falcon.HTTP_400
+            resp.media = {
+                "error": "missing_params",
+                "detail": "template is missing the MIME content type",
+            }
+            return
+
+        try:
+            document_parser = get_document_parser(template_bytes, template_content_type)
+
+            populated_file = document_parser.populate_document(
+                template_data,
+            )
+
+        except Exception as e:
+            logger.exception(f"Error populating artifact: {str(e)}")
+
+            resp.status = falcon.HTTP_500
+            resp.media = {
+                "error": "artifact_population_failed",
+                "detail": str(e),
+            }
+            return
+
+        try:
+            s3_client = create_s3_client(storage)
+            bucket = get_bucket_for_storage(storage)
+
+            s3_client.put_object(
+                Bucket=bucket,
+                Key=document_id,
+                Body=populated_file,
+                ContentType=template_content_type,
+            )
+
+        except Exception as e:
+            logger.exception("Error uploading artifact to S3")
+
+            resp.status = falcon.HTTP_500
+            resp.media = {
+                "error": "upload_failed",
+                "detail": str(e),
+            }
+            return
+
+        resp.status = falcon.HTTP_200
+        resp.media = {}
+
+
 app.add_route("/api/artifacts/GenerateArtifact", DirectArtifactPost())
-parse_artifact_resource = ParseArtifactPost()
 
 app.add_route(
     "/api/artifacts/ParseArtifact",
-    parse_artifact_resource,
+    ParseArtifactPost(),
+)
+
+app.add_route(
+    "/api/artifacts/GenerateDocument",
+    GenerateDocumentPost(),
 )
 
 
