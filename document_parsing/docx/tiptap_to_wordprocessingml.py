@@ -4,8 +4,6 @@ This is deliberately not a general HTML-to-DOCX converter. Unsupported
 structures fail loudly so that document generation never silently drops data.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
