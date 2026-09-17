@@ -270,6 +270,9 @@ class GenerateDocumentPost:
         template_data: dict[str, Any] | None = None
         storage: str | None = None
         template_content_type: str | None = None
+        # Consider storing which fields are rich text with the fields themselves.
+        # This is a temporary workaround.
+        rich_text_fields: list[str] = []
 
         try:
             form = await req.get_media()
@@ -287,6 +290,9 @@ class GenerateDocumentPost:
 
                 elif part.name == "storage":
                     storage = await part.text
+
+                elif part.name == "rich_text_fields":
+                    rich_text_fields = json.loads(await part.text)
 
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             resp.status = falcon.HTTP_400
@@ -314,10 +320,7 @@ class GenerateDocumentPost:
 
         try:
             document_parser = get_document_parser(template_bytes, template_content_type)
-
-            populated_file = document_parser.populate_document(
-                template_data,
-            )
+            populated_file = document_parser.populate_document(template_data, rich_text_fields=rich_text_fields)
 
         except Exception as e:
             logger.exception(f"Error populating artifact: {str(e)}")
