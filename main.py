@@ -354,6 +354,58 @@ class GenerateDocumentPost:
         resp.media = {}
 
 
+class GetDocumentKeysPost:
+    async def on_post(
+        self,
+        req: falcon.asgi.Request,
+        resp: falcon.asgi.Response,
+    ):
+        template_bytes: bytes | None = None
+        template_content_type: str | None = None
+
+        form = await req.get_media()
+
+        async for part in form:
+            if part.name == "template":
+                template_bytes = await part.stream.read()
+                template_content_type = part.content_type
+
+        if template_bytes is None:
+            resp.status = falcon.HTTP_400
+            resp.media = {
+                "error": "missing_params",
+                "detail": "template is required",
+            }
+            return
+
+        if not template_content_type:
+            resp.status = falcon.HTTP_400
+            resp.media = {
+                "error": "missing_params",
+                "detail": "template is missing the MIME content type",
+            }
+            return
+
+        try:
+            document_parser = get_document_parser(
+                template_bytes,
+                template_content_type,
+            )
+            document_keys = document_parser.get_document_keys()
+        except Exception as e:
+            logger.exception("Error getting document keys")
+            resp.status = falcon.HTTP_500
+            resp.media = {
+                "error": "document_key_extraction_failed",
+                "detail": str(e),
+            }
+            return
+
+        resp.status = falcon.HTTP_200
+        resp.media = {
+            "keys": document_keys,
+        }
+
 app.add_route("/api/artifacts/GenerateArtifact", DirectArtifactPost())
 
 app.add_route(
@@ -364,6 +416,11 @@ app.add_route(
 app.add_route(
     "/api/artifacts/GenerateDocument",
     GenerateDocumentPost(),
+)
+
+app.add_route(
+    "/api/artifacts/GetDocumentKeys",
+    GetDocumentKeysPost(),
 )
 
 
