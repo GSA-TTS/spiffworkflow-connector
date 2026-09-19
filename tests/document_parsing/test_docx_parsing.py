@@ -230,3 +230,17 @@ class TestDocxParser:
             )
             == []
         )
+
+    def test_get_document_keys_returns_expected_unique_keys(self, parser):
+        document_keys = parser.get_document_keys()
+
+        expected_keys = {
+            "responsibleOfficialTitle",
+            "signatureDate",
+            "projectNameAttachment1",
+            "grantIDAttachment1",
+            "ceEligibility",
+        }
+
+        assert expected_keys.issubset(document_keys)
+        assert len(document_keys) == len(set(document_keys))
