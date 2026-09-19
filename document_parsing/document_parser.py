@@ -13,3 +13,7 @@ class DocumentParser[T](ABC):
     @abstractmethod
     def populate_document(self, data: dict[str, Any]) -> T:
         pass
+
+    @abstractmethod
+    def get_document_keys(self) -> list[str]:
+        pass
