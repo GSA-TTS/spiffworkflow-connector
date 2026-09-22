@@ -11,5 +11,5 @@ class DocumentParser[T](ABC):
         pass
 
     @abstractmethod
-    def populate_document(self, data: dict[str, Any]) -> T:
+    def populate_document(self, data: dict[str, Any], **options: Any) -> T:
         pass
