@@ -1,5 +1,12 @@
 """Convert the application's constrained TipTap HTML to WordprocessingML.
 
+This is shamelessly bald LLM-generated code. It should be considered
+safe for demo purposes only, not for production. We use it simply
+for the sake of quickly spinning up something that can support upcoming
+demo/testing requirements.
+
+See ADR: https://github.com/GSA-TTS/pic-blm-cxworks/pull/1153.
+
 This is deliberately not a general HTML-to-DOCX converter. Unsupported
 structures fail loudly so that document generation never silently drops data.
 """
