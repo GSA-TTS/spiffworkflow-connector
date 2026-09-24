@@ -66,18 +66,6 @@ COPY *.py .
 COPY ./bin ./bin/
 COPY ./templates ./templates/
 
-# Install minio client (architecture agnostic)
-RUN set -eux; \
-  arch="$(uname -m)"; \
-  case "$arch" in \
-  x86_64) mc_arch="amd64" ;; \
-  aarch64|arm64) mc_arch="arm64" ;; \
-  *) echo "Unsupported architecture: $arch"; exit 1 ;; \
-  esac; \
-  curl -fsSL "https://dl.min.io/client/mc/release/linux-${mc_arch}/mc" -o /usr/local/bin/mc; \
-  chmod +x /usr/local/bin/mc; \
-  /usr/local/bin/mc --version
-
 ENTRYPOINT ["./bin/run_locally"]
 
 CMD ["uv", "run", "granian", "--reload", "--host", "0.0.0.0", "--port", "8200", "--interface", "asgi", "main:app"]
