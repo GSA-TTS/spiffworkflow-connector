@@ -32,6 +32,7 @@ services:
   minio:
     container_name: "minio-spiffworkflow-connector"
     image: cgr.dev/chainguard/minio
+    user: "0:0"            # <-- add; old minio/minio ran as root too
     command: server /data --console-address ":9004"
     ports:
       - "9003:9000" # S3 API
@@ -41,6 +42,7 @@ services:
 
   createbuckets:
     image: cgr.dev/chainguard/minio
+    user: "0:0"            # <-- add; old minio/minio ran as root too    
     depends_on:
       - minio
     restart: "no"
