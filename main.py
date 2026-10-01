@@ -109,7 +109,7 @@ class DirectArtifactLink:
         s3_client = create_s3_client(None)
         bucket = get_bucket_for_storage(None)
         try:
-            s3_client.head_object(Bucket=bucket, Key=artifact_id)
+            head = s3_client.head_object(Bucket=bucket, Key=artifact_id)
         except s3_client.exceptions.NoSuchKey:
             resp.status = falcon.HTTP_404
             resp.media = {
@@ -132,7 +132,7 @@ class DirectArtifactLink:
             return
 
         resp.status = falcon.HTTP_200
-        resp.media = {"url": url}
+        resp.media = {"url": url, "size": head["ContentLength"]}
 
 
 # artifact_id shape: {projectId}/{processId}/{artifactId}
