@@ -23,11 +23,12 @@ class TestDirectArtifactLink:
         mock_create_s3.return_value = mock_s3
         mock_get_bucket.return_value = "test-bucket"
         mock_presigned_url.return_value = "https://s3.example.com/presigned/my-artifact"
+        mock_s3.head_object.return_value = {"ContentLength": 12345}
 
         result = client.simulate_get(f"{DIRECT_GET_ENDPOINT}/my-artifact")
 
         assert result.status_code == 200
-        assert result.json == {"url": "https://s3.example.com/presigned/my-artifact"}
+        assert result.json == {"url": "https://s3.example.com/presigned/my-artifact", "size": 12345}
         mock_s3.head_object.assert_called_once_with(Bucket="test-bucket", Key="my-artifact")
 
     @patch("main.generate_presigned_url")
@@ -45,11 +46,13 @@ class TestDirectArtifactLink:
         mock_create_s3.return_value = mock_s3
         mock_get_bucket.return_value = "test-bucket"
         mock_presigned_url.return_value = "https://s3.example.com/presigned/proj-1/doc-2"
+        mock_s3.head_object.return_value = {"ContentLength": 678}
 
         result = client.simulate_get(f"{DIRECT_GET_ENDPOINT}/proj-1/doc-2")
 
         assert result.status_code == 200
         assert result.json["url"] == "https://s3.example.com/presigned/proj-1/doc-2"
+        assert result.json["size"] == 678
         mock_s3.head_object.assert_called_once_with(Bucket="test-bucket", Key="proj-1/doc-2")
 
     @patch("main.get_bucket_for_storage")
@@ -110,6 +113,7 @@ class TestDirectArtifactLink:
         mock_s3 = MagicMock()
         mock_create_s3.return_value = mock_s3
         mock_get_bucket.return_value = "test-bucket"
+        mock_s3.head_object.return_value = {"ContentLength": 1}
         mock_presigned_url.side_effect = RuntimeError("presign exploded")
 
         result = client.simulate_get(f"{DIRECT_GET_ENDPOINT}/some-artifact")
