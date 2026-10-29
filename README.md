@@ -1,3 +1,10 @@
+---
+title: "SpiffWorkflow Service Connector"
+description: "Setup, configuration, and development guide for the service connector."
+status: canonical
+tier: 2
+---
+
 # **SpiffWorkflow Service Connector**
 
 This repository contains a V2 (simplified) implementation of SpiffWorkflow's Service Connector Proxy. It provides an "Artifacts" service that can generate a PDF from an included HTML template and manage its storage in an S3 bucket.
@@ -20,17 +27,39 @@ This connector is designed to be flexible, supporting different S3 storage backe
 
 ## **Requirements**
 
-- Python 3.12+
-- Playwright library
-- Jinja2 library
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) for Python and dependency management
+- Python version specified in `.python-version` (uv can download it automatically)
+- Chromium for PDF rendering (installed through Playwright below)
 - S3 bucket credentials and configuration
 
 ## **Usage**
 
-1. Install the required libraries using `pip install -r requirements.txt`.
-2. Ensure your environment is configured with the necessary S3 credentials. See the Configuration section.
-3. Use the `GenerateArtifact` command to create and store a PDF.
-4. Use the `GetLinkToArtifact` command to retrieve links to an existing artifact.
+1. Install the locked application and development dependencies from the repository root:
+
+   ```bash
+   uv sync --locked
+   ```
+
+2. Install Chromium and its system dependencies for PDF rendering (Linux system package installation may require administrator privileges):
+
+   ```bash
+   uv run --locked playwright install chromium --with-deps --only-shell
+   ```
+
+3. Ensure your environment is configured with the necessary S3 credentials. See the Configuration section.
+4. Use the `GenerateArtifact` command to create and store a PDF.
+5. Use the `GetLinkToArtifact` command to retrieve links to an existing artifact.
+
+### Dependency management
+
+`pyproject.toml` declares application dependencies, the `dev` dependency group, and
+project tooling. `uv.lock` records the resolved versions and package hashes. Keep
+both files in version control and use `uv sync --locked` to install reproducibly;
+it fails if the lockfile needs updating. For a runtime-only environment, use
+`uv sync --locked --no-dev`.
+
+When changing dependencies, update `pyproject.toml` and regenerate `uv.lock` with
+`uv lock`, then run the checks below and commit both files together.
 
 ## **Configuration**
 
@@ -122,16 +151,22 @@ portable.
 
 ## **Tests**
 
-To run pytest unit tests, either exec into the connector service container and run:
+From the repository root, run lint, formatting checks, and the test suite:
 
-```
-uv run pytest -v --cov=. --cov-report=term-missing
+```bash
+uv run --locked poe check
 ```
 
-or, in the root of the project, run:
+To run only the tests with coverage:
 
+```bash
+uv run --locked poe test
 ```
-docker exec spiffworkflow-connector-connector-1 uv run pytest -v --cov=. --cov-report=term-missing
+
+For the Docker development environment, run:
+
+```bash
+make test
 ```
 
 ## **Contributing**

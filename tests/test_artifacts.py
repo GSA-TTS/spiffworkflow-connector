@@ -1,7 +1,37 @@
 import json
+from io import BytesIO
 from unittest.mock import patch
 
+import pytest
+from pypdf import PdfReader, PdfWriter
+from pypdf.errors import PdfReadError
+
+from artifacts import v1_do_artifacts_connector
+
 API_ENDPOINT = "/v1/do/artifacts/"
+
+
+class TestPdfMerge:
+    @pytest.mark.parametrize("page_widths", [[], [[100]], [[100, 200], [300]]])
+    def test_merge_preserves_pages_and_order(self, page_widths):
+        pdf_buffers = []
+        for widths in page_widths:
+            writer = PdfWriter()
+            for width in widths:
+                writer.add_blank_page(width=width, height=400)
+            buffer = BytesIO()
+            writer.write(buffer)
+            pdf_buffers.append(buffer.getvalue())
+
+        merged = v1_do_artifacts_connector()._merge_pdfs(pdf_buffers)
+
+        reader = PdfReader(BytesIO(merged), strict=True)
+        assert [page.mediabox.width for page in reader.pages] == [width for widths in page_widths for width in widths]
+        assert all(page.mediabox.height == 400 for page in reader.pages)
+
+    def test_merge_rejects_invalid_pdf(self):
+        with pytest.raises(PdfReadError):
+            v1_do_artifacts_connector()._merge_pdfs([b"not a PDF"])
 
 
 class TestArtifactsService:
